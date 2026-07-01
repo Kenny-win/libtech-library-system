@@ -15,7 +15,7 @@ import {
   Legend,
 } from "recharts";
 
-const DasborAnalitikPage = ({isDarkMode, URL}) => {
+const DasborAnalitikPage = ({ isDarkMode, URL }) => {
   const [dataTren, setDataTren] = useState([]);
   const [dataKategori, setDataKategori] = useState([]);
   const [dataStatus, setDataStatus] = useState([]);
@@ -69,16 +69,14 @@ const DasborAnalitikPage = ({isDarkMode, URL}) => {
         const urlKategori =
           `${URL}/api/analitik/kategori-populer` + queryTanggal;
 
-        let urlStatus =
-          `${URL}/api/analitik/status-sirkulasi` + queryTanggal;
+        let urlStatus = `${URL}/api/analitik/status-sirkulasi` + queryTanggal;
 
         if (filterRoleStatus) {
           urlStatus += (queryTanggal ? "&" : "?") + `role=${filterRoleStatus}`;
         }
 
         // SETUP URL LEADERBOARD
-        let urlLeaderboard =
-          `${URL}/api/analitik/peminjam-aktif`;
+        let urlLeaderboard = `${URL}/api/analitik/peminjam-aktif`;
         const lbParams = [];
         if (startDate) lbParams.push(`startDate=${startDate}`);
         if (endDate) lbParams.push(`endDate=${endDate}`);
@@ -92,16 +90,25 @@ const DasborAnalitikPage = ({isDarkMode, URL}) => {
         }
 
         // SETUP URL DENDA
-        let urlDenda =
-          `${URL}/api/analitik/rekap-denda` + queryTanggal;
+        let urlDenda = `${URL}/api/analitik/rekap-denda` + queryTanggal;
 
         const [resTren, resKategori, resStatus, resLeaderboard, resDenda] =
           await Promise.all([
-            fetch(urlTren),
-            fetch(urlKategori),
-            fetch(urlStatus),
-            fetch(urlLeaderboard),
-            fetch(urlDenda),
+            fetch(urlTren, {
+              headers: { "ngrok-skip-browser-warning": "true" },
+            }),
+            fetch(urlKategori, {
+              headers: { "ngrok-skip-browser-warning": "true" },
+            }),
+            fetch(urlStatus, {
+              headers: { "ngrok-skip-browser-warning": "true" },
+            }),
+            fetch(urlLeaderboard, {
+              headers: { "ngrok-skip-browser-warning": "true" },
+            }),
+            fetch(urlDenda, {
+              headers: { "ngrok-skip-browser-warning": "true" },
+            }),
           ]);
 
         const resultTren = await resTren.json();
@@ -128,7 +135,16 @@ const DasborAnalitikPage = ({isDarkMode, URL}) => {
     };
 
     fetchAnalitik();
-  }, [startDate, endDate, groupBy, filterRoleStatus, filterStatusLokal, filterRoleLeaderboard, filterLimit, URL]); //TODO INI ADA TAMBAH URL
+  }, [
+    startDate,
+    endDate,
+    groupBy,
+    filterRoleStatus,
+    filterStatusLokal,
+    filterRoleLeaderboard,
+    filterLimit,
+    URL,
+  ]); //TODO INI ADA TAMBAH URL
 
   // LOGIKA SLIDER (PAGINATION)
   const itemsPerSlide = 5;
@@ -161,7 +177,9 @@ const DasborAnalitikPage = ({isDarkMode, URL}) => {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight transition-colors">Dasbor Analitik</h2>
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight transition-colors">
+          Dasbor Analitik
+        </h2>
         <p className="mt-1 text-sm text-slate-500 dark:text-white">
           Laporan statistik dan wawasan performa perpustakaan Anda.
         </p>
@@ -423,7 +441,7 @@ const DasborAnalitikPage = ({isDarkMode, URL}) => {
                     }}
                   />
                   <Tooltip
-                    cursor={{ fill: isDarkMode? "#585858": "#f8fafc" }}
+                    cursor={{ fill: isDarkMode ? "#585858" : "#f8fafc" }}
                     contentStyle={{
                       borderRadius: "12px",
                       border: "none",
