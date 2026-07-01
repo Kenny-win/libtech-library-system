@@ -60,6 +60,7 @@ Backend dibangun menggunakan Node.js dan Express.
 1. Buka terminal, arahkan ke folder backend: `cd backend`.
 2. Instal semua dependensi pendukung: `npm install`
 3. Buat file `.env` di dalam folder `backend/` dan isi dengan konfigurasi database serta kredensial email Anda:
+
 `
 DB_HOST=localhost
 `
@@ -84,7 +85,7 @@ EMAIL_USER=email_resmi_sekolah@gmail.com
 EMAIL_PASS=16_digit_app_password_google
 `
 
-5. Jalankan server backend: `node server.js`
+4. Jalankan server backend: `node server.js`
 *(Catatan: Jika Anda telah memasang `nodemon` di package.json, Anda dapat menggunakan perintah `npm run dev` agar server otomatis me-restart saat ada perubahan kode).*
    
    Server backend akan berjalan di **`http://localhost:5000`**.
