@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import DetailPinjamanModal from "./DetailPinjamanModal";
 
-const DaftarPinjamanPage = ({ showAlert, showConfirm }) => {
+const DaftarPinjamanPage = ({ showAlert, showConfirm, URL }) => {
   const [pinjamanList, setPinjamanList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -29,7 +29,9 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm }) => {
     const fetchPinjaman = async () => {
       try {
         setLoading(true);
-        const res = await fetch("http://127.0.0.1:5000/api/peminjaman");
+        const res = await fetch(`${URL}/api/peminjaman`, {
+          headers: { "ngrok-skip-browser-warning": "true" },
+        });
         const result = await res.json();
 
         if (result.success) {
@@ -44,7 +46,7 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm }) => {
     };
 
     fetchPinjaman();
-  }, [refreshTrigger, showAlert]);
+  }, [URL, refreshTrigger, showAlert]);
 
   // Fungsi menghitung keterlambatan saat ini (berjalan) wajib di atas fungsi filteredPinjamanList
   const hitungHariTerlambat = (tenggat) => {
@@ -73,10 +75,13 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm }) => {
       async () => {
         try {
           const res = await fetch(
-            `http://127.0.0.1:5000/api/peminjaman/${id_peminjaman}/status`,
+            `${URL}/api/peminjaman/${id_peminjaman}/status`,
             {
               method: "PUT",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                "ngrok-skip-browser-warning": "true",
+              },
               body: JSON.stringify({
                 status: statusBaru,
                 tanggal_harus_kembali,
@@ -135,7 +140,7 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm }) => {
     setBatasTampil(10);
   };
 
-  // LOGIKA FILTERING DATA 
+  // LOGIKA FILTERING DATA
   const filteredPinjamanList = pinjamanList.filter((item) => {
     const matchNama =
       item.nama?.toLowerCase().includes(filters.nama.toLowerCase()) ?? false;
@@ -178,7 +183,7 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm }) => {
     );
   });
 
-  // LOGIKA SORTING DATA 
+  // LOGIKA SORTING DATA
   const sortedPinjamanList = [...filteredPinjamanList].sort((a, b) => {
     if (sortOrder === "terbaru") {
       return new Date(b.tanggal_pinjam) - new Date(a.tanggal_pinjam);

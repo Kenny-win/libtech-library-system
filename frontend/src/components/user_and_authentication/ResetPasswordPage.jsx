@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const ResetPasswordPage = ({ showAlert, showConfirm }) => {
+const ResetPasswordPage = ({ showAlert, showConfirm, URL }) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -12,7 +12,9 @@ const ResetPasswordPage = ({ showAlert, showConfirm }) => {
     const fetchRequests = async () => {
       try {
         setLoading(true);
-        const res = await fetch("http://127.0.0.1:5000/api/auth/lupa-password-requests");
+        const res = await fetch(`${URL}/api/auth/lupa-password-requests`, {
+          headers: { "ngrok-skip-browser-warning": "true" }
+        });
         const result = await res.json();
         if (result.success) setRequests(result.data);
       // eslint-disable-next-line no-unused-vars
@@ -23,7 +25,7 @@ const ResetPasswordPage = ({ showAlert, showConfirm }) => {
       }
     };
     fetchRequests();
-  }, [refreshTrigger, showAlert]);
+  }, [URL, refreshTrigger, showAlert]);
 
   const handleApprove = (id_request, email_user) => {
     const pwd = newPasswords[id_request];
@@ -37,9 +39,9 @@ const ResetPasswordPage = ({ showAlert, showConfirm }) => {
       `Apakah Anda yakin ingin menetapkan password baru untuk ${email_user} dan mengirimkannya via email?`, 
       async () => {
         try {
-          const response = await fetch(`http://127.0.0.1:5000/api/auth/lupa-password-requests/${id_request}/approve`, {
+          const response = await fetch(`${URL}/api/auth/lupa-password-requests/${id_request}/approve`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
             body: JSON.stringify({ newPassword: pwd }),
           });
           const result = await response.json();

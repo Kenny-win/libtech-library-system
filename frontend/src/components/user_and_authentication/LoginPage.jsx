@@ -2,7 +2,7 @@ import { useState } from "react";
 import logoPerusahaan from "../../assets/bc.jpeg"; // Sesuaikan jika namanya berbeda
 import gambarSekolah from "../../assets/slider-1-1024x513.jpg";
 
-const LoginPage = ({ onLoginSuccess, showAlert }) => {
+const LoginPage = ({ onLoginSuccess, showAlert, URL }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -21,9 +21,9 @@ const LoginPage = ({ onLoginSuccess, showAlert }) => {
 
     try {
       setIsLoading(true);
-      const response = await fetch("http://127.0.0.1:5000/api/auth/login", {
+      const response = await fetch(`${URL}/api/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
         body: JSON.stringify({ email, password }),
       });
 
@@ -61,10 +61,10 @@ const LoginPage = ({ onLoginSuccess, showAlert }) => {
     try {
       // Tembak API menggunakan email yang sudah diketik user
       const response = await fetch(
-        "http://127.0.0.1:5000/api/auth/lupa-password",
+        `${URL}/api/auth/lupa-password`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
           body: JSON.stringify({ email: email }),
         },
       );

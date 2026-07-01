@@ -16,6 +16,8 @@ import Footer from "./components/Footer";
 import ManajemenUserPage from "./components/user_and_authentication/ManajemenUserPage";
 
 function App() {
+  // const URL = "http://127.0.0.1:5000" // INI GUNAKAN IP LOCAL 7 PROT : 5000
+  const URL = "https://shrubs-anthem-parrot.ngrok-free.dev";
   // Rumus: Jam * Menit * Detik * Milidetik (2 jam session)
   const SESSION_DURATION = 2 * 60 * 60 * 1000;
   const [currentUser, setCurrentUser] = useState(() => {
@@ -146,7 +148,9 @@ function App() {
     let isMounted = true;
     const ambilDataBuku = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:5000/api/buku");
+        const response = await fetch(`${URL}/api/buku`, {
+          headers: { "ngrok-skip-browser-warning": "true" },
+        });
         const result = await response.json();
         if (isMounted) {
           if (result.success) {
@@ -173,7 +177,9 @@ function App() {
     // Fungsi ambil data kategori
     const ambilDataKategori = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:5000/api/kategori");
+        const response = await fetch(`${URL}/api/kategori`, {
+          headers: { "ngrok-skip-browser-warning": "true" },
+        });
         const result = await response.json();
         if (isMounted && result.success) {
           setKategoriList(result.data);
@@ -341,14 +347,15 @@ function App() {
     e.preventDefault();
     try {
       // Tentukan URL dan Method berdasarkan mode Edit atau Tambah Baru
-      const url = isEditMode
-        ? `http://127.0.0.1:5000/api/buku/${editId}`
-        : "http://127.0.0.1:5000/api/buku";
+      const url = isEditMode ? `${URL}/api/buku/${editId}` : `${URL}/api/buku`;
       const method = isEditMode ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method: method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
         body: JSON.stringify(formData),
       });
 
@@ -375,9 +382,10 @@ function App() {
     try {
       setLoading(true);
       setIsModalOpen(false);
-      const response = await fetch("http://127.0.0.1:5000/api/buku/upload", {
+      const response = await fetch(`${URL}/api/buku/upload`, {
         method: "POST",
         body: dataKirim,
+        headers: { "ngrok-skip-browser-warning": "true" }
       });
       const result = await response.json();
       if (result.success) {
@@ -407,10 +415,10 @@ function App() {
       "Apakah Anda yakin ingin menghapus buku ini secara permanen?",
       async () => {
         try {
-          const response = await fetch(
-            `http://127.0.0.1:5000/api/buku/${id_buku}`,
-            { method: "DELETE" },
-          );
+          const response = await fetch(`${URL}/api/buku/${id_buku}`, {
+            method: "DELETE",
+            headers: { "ngrok-skip-browser-warning": "true" }
+          });
           const result = await response.json();
 
           if (result.success) {
@@ -490,9 +498,12 @@ function App() {
       `Ajukan peminjaman untuk buku "${buku.judul}"?`,
       async () => {
         try {
-          const response = await fetch("http://127.0.0.1:5000/api/peminjaman", {
+          const response = await fetch(`${URL}/api/peminjaman`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": "true",
+            },
             body: JSON.stringify({
               id_buku: buku.id_buku,
               id_user: idUserAsli,
@@ -521,7 +532,11 @@ function App() {
   if (!currentUser) {
     return (
       <>
-        <LoginPage onLoginSuccess={handleLoginSuccess} showAlert={showAlert} />
+        <LoginPage
+          onLoginSuccess={handleLoginSuccess}
+          showAlert={showAlert}
+          URL={URL}
+        />
         <CustomAlert
           isOpen={alertData.isOpen}
           type={alertData.type}
@@ -673,22 +688,42 @@ function App() {
           </>
         )}
         {activePage === "peminjaman" && role === "admin" && (
-          <DaftarPinjamanPage showAlert={showAlert} showConfirm={showConfirm} />
+          <DaftarPinjamanPage
+            showAlert={showAlert}
+            showConfirm={showConfirm}
+            URL={URL}
+          />
         )}
         {activePage === "pinjamanku" && role !== "admin" && (
-          <DaftarPinjamankuPage role={role} currentUser={currentUser} />
+          <DaftarPinjamankuPage
+            role={role}
+            currentUser={currentUser}
+            URL={URL}
+          />
         )}
         {activePage === "kategori" && role === "admin" && (
-          <KategoriPage showAlert={showAlert} showConfirm={showConfirm} />
+          <KategoriPage
+            showAlert={showAlert}
+            showConfirm={showConfirm}
+            URL={URL}
+          />
         )}
         {activePage === "dasbor" && role === "admin" && (
-          <DasborAnalitikPage isDarkMode={isDarkMode} />
+          <DasborAnalitikPage isDarkMode={isDarkMode} URL={URL} />
         )}
         {activePage === "reset-password" && role === "admin" && (
-          <ResetPasswordPage showAlert={showAlert} showConfirm={showConfirm} />
+          <ResetPasswordPage
+            showAlert={showAlert}
+            showConfirm={showConfirm}
+            URL={URL}
+          />
         )}
         {activePage === "manajemen-user" && role === "admin" && (
-          <ManajemenUserPage showAlert={showAlert} showConfirm={showConfirm} />
+          <ManajemenUserPage
+            showAlert={showAlert}
+            showConfirm={showConfirm}
+            URL={URL}
+          />
         )}
       </main>
 
@@ -713,8 +748,8 @@ function App() {
         handleInputChange={handleInputChange}
         handleSubmit={handleSubmit}
         handleExcelUpload={handleExcelUpload}
-        kategoriList={kategoriList} 
-        isEditMode={isEditMode} 
+        kategoriList={kategoriList}
+        isEditMode={isEditMode}
       />
 
       <CustomAlert

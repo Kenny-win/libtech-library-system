@@ -2,14 +2,14 @@
 import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 
-const ManajemenUserPage = ({ showAlert, showConfirm }) => {
+const ManajemenUserPage = ({ showAlert, showConfirm, URL }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [batasTampil, setBatasTampil] = useState(10);
 
-  // STATE KELAS PADA FILTER 
+  // STATE KELAS PADA FILTER
   const [filters, setFilters] = useState({
     nama: "",
     email: "",
@@ -35,7 +35,9 @@ const ManajemenUserPage = ({ showAlert, showConfirm }) => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const res = await fetch("http://127.0.0.1:5000/api/users");
+        const res = await fetch(`${URL}/api/users`, {
+          headers: { "ngrok-skip-browser-warning": "true" },
+        });
         const result = await res.json();
         if (result.success) setUsers(result.data);
       } catch (err) {
@@ -49,7 +51,7 @@ const ManajemenUserPage = ({ showAlert, showConfirm }) => {
       }
     };
     fetchUsers();
-  }, [refreshTrigger, showAlert]);
+  }, [URL, refreshTrigger, showAlert]);
 
   // RESET FILTER KELAS OTOMATIS SAAT PERAN DIUBAH
   const handleFilterChange = (e) => {
@@ -74,7 +76,7 @@ const ManajemenUserPage = ({ showAlert, showConfirm }) => {
     setBatasTampil(10);
   };
 
-  // LOGIKA FILTER KELAS 
+  // LOGIKA FILTER KELAS
   const filteredUsers = users.filter((u) => {
     const matchNama =
       u.nama?.toLowerCase().includes(filters.nama.toLowerCase()) ?? false;
@@ -145,10 +147,10 @@ const ManajemenUserPage = ({ showAlert, showConfirm }) => {
       `Apakah Anda yakin ingin menghapus data pengguna "${nama_user}" secara permanen?`,
       async () => {
         try {
-          const response = await fetch(
-            `http://127.0.0.1:5000/api/users/${id_user}`,
-            { method: "DELETE" },
-          );
+          const response = await fetch(`${URL}/api/users/${id_user}`, {
+            method: "DELETE",
+            headers: { "ngrok-skip-browser-warning": "true" }
+          });
           const result = await response.json();
 
           if (result.success) {
@@ -184,13 +186,16 @@ const ManajemenUserPage = ({ showAlert, showConfirm }) => {
     e.preventDefault();
     try {
       const url = isEditMode
-        ? `http://127.0.0.1:5000/api/users/${editId}`
-        : "http://127.0.0.1:5000/api/users";
+        ? `${URL}/api/users/${editId}`
+        : `${URL}/api/users`;
       const method = isEditMode ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method: method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
         body: JSON.stringify(formData),
       });
       const result = await response.json();
@@ -248,13 +253,11 @@ const ManajemenUserPage = ({ showAlert, showConfirm }) => {
 
         try {
           setIsUploading(true);
-          const response = await fetch(
-            "http://127.0.0.1:5000/api/users/upload",
-            {
-              method: "POST",
-              body: formData,
-            },
-          );
+          const response = await fetch(`${URL}/api/users/upload`, {
+            method: "POST",
+            body: formData,
+            headers: { "ngrok-skip-browser-warning": "true" }
+          });
           const result = await response.json();
 
           if (result.success) {

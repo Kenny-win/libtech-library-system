@@ -10,7 +10,13 @@ const fs = require('fs');
 const app = express();
 
 // Middleware
-app.use(cors());
+// app.use(cors()) ini nanti ketika sudah berjalan baru buka
+
+// sementara seperti dibawah dulu karena pakai ngrok
+app.use(cors({
+  origin: '*', 
+  allowedHeaders: ['Content-Type', 'ngrok-skip-browser-warning'] // Mengizinkan sandi dari Ngrok
+}));
 app.use(express.json()); // Supaya server bisa membaca data JSON dari frontend
 
 // Import Route Buku

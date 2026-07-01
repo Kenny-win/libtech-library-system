@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const DaftarPinjamankuPage = ({ role, currentUser }) => {
+const DaftarPinjamankuPage = ({ role, currentUser, URL }) => {
   const [riwayatList, setRiwayatList] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -18,7 +18,9 @@ const DaftarPinjamankuPage = ({ role, currentUser }) => {
       try {
         setLoading(true);
         const res = await fetch(
-          `http://127.0.0.1:5000/api/peminjaman/user/${userId}`,
+          `${URL}/api/peminjaman/user/${userId}`, {
+            headers: { "ngrok-skip-browser-warning": "true" }
+          }
         );
         const result = await res.json();
 
@@ -34,7 +36,7 @@ const DaftarPinjamankuPage = ({ role, currentUser }) => {
     };
 
     fetchRiwayatPinjaman();
-  }, [userId]);
+  }, [URL, userId]);
 
   const hitungHariTerlambat = (tenggat) => {
     if (!tenggat) return 0;

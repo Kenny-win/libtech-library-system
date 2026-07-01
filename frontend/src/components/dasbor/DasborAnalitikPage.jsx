@@ -15,7 +15,7 @@ import {
   Legend,
 } from "recharts";
 
-const DasborAnalitikPage = ({isDarkMode}) => {
+const DasborAnalitikPage = ({isDarkMode, URL}) => {
   const [dataTren, setDataTren] = useState([]);
   const [dataKategori, setDataKategori] = useState([]);
   const [dataStatus, setDataStatus] = useState([]);
@@ -62,15 +62,15 @@ const DasborAnalitikPage = ({isDarkMode}) => {
         if (endDate) params.push(`endDate=${endDate}`);
         const queryTanggal = params.length > 0 ? "?" + params.join("&") : "";
 
-        let urlTren = "http://127.0.0.1:5000/api/analitik/tren" + queryTanggal;
+        let urlTren = `${URL}/api/analitik/tren` + queryTanggal;
         if (groupBy)
           urlTren += (queryTanggal ? "&" : "?") + `groupBy=${groupBy}`;
 
         const urlKategori =
-          "http://127.0.0.1:5000/api/analitik/kategori-populer" + queryTanggal;
+          `${URL}/api/analitik/kategori-populer` + queryTanggal;
 
         let urlStatus =
-          "http://127.0.0.1:5000/api/analitik/status-sirkulasi" + queryTanggal;
+          `${URL}/api/analitik/status-sirkulasi` + queryTanggal;
 
         if (filterRoleStatus) {
           urlStatus += (queryTanggal ? "&" : "?") + `role=${filterRoleStatus}`;
@@ -78,7 +78,7 @@ const DasborAnalitikPage = ({isDarkMode}) => {
 
         // SETUP URL LEADERBOARD
         let urlLeaderboard =
-          "http://127.0.0.1:5000/api/analitik/peminjam-aktif";
+          `${URL}/api/analitik/peminjam-aktif`;
         const lbParams = [];
         if (startDate) lbParams.push(`startDate=${startDate}`);
         if (endDate) lbParams.push(`endDate=${endDate}`);
@@ -93,7 +93,7 @@ const DasborAnalitikPage = ({isDarkMode}) => {
 
         // SETUP URL DENDA
         let urlDenda =
-          "http://127.0.0.1:5000/api/analitik/rekap-denda" + queryTanggal;
+          `${URL}/api/analitik/rekap-denda` + queryTanggal;
 
         const [resTren, resKategori, resStatus, resLeaderboard, resDenda] =
           await Promise.all([
@@ -128,15 +128,7 @@ const DasborAnalitikPage = ({isDarkMode}) => {
     };
 
     fetchAnalitik();
-  }, [
-    startDate,
-    endDate,
-    groupBy,
-    filterRoleStatus,
-    filterStatusLokal,
-    filterRoleLeaderboard,
-    filterLimit,
-  ]);
+  }, [startDate, endDate, groupBy, filterRoleStatus, filterStatusLokal, filterRoleLeaderboard, filterLimit, URL]); //TODO INI ADA TAMBAH URL
 
   // LOGIKA SLIDER (PAGINATION)
   const itemsPerSlide = 5;

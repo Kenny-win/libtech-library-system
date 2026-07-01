@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const KategoriPage = ({ showAlert, showConfirm }) => {
+const KategoriPage = ({ showAlert, showConfirm, URL }) => {
   const [kategoriList, setKategoriList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -22,7 +22,9 @@ const KategoriPage = ({ showAlert, showConfirm }) => {
     const fetchKategori = async () => {
       try {
         setLoading(true);
-        const res = await fetch("http://127.0.0.1:5000/api/kategori");
+        const res = await fetch(`${URL}/api/kategori`, {
+          headers: { "ngrok-skip-browser-warning": "true" }
+        });
         const result = await res.json();
         if (result.success) setKategoriList(result.data);
         // eslint-disable-next-line no-unused-vars
@@ -33,7 +35,7 @@ const KategoriPage = ({ showAlert, showConfirm }) => {
       }
     };
     fetchKategori();
-  }, [refreshTrigger, showAlert]);
+  }, [URL, refreshTrigger, showAlert]);
 
   // Submit Form (Create / Update)
   const handleSubmit = async (e) => {
@@ -42,13 +44,13 @@ const KategoriPage = ({ showAlert, showConfirm }) => {
 
     try {
       const url = isEditMode
-        ? `http://127.0.0.1:5000/api/kategori/${editId}`
-        : "http://127.0.0.1:5000/api/kategori";
+        ? `${URL}/api/kategori/${editId}`
+        : `${URL}/api/kategori`;
       const method = isEditMode ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
         body: JSON.stringify(formData),
       });
       const result = await res.json();
@@ -84,8 +86,8 @@ const KategoriPage = ({ showAlert, showConfirm }) => {
         // SELURUH LOGIKA FETCH DIMASUKKAN KE DALAM SINI
         try {
           const res = await fetch(
-            `http://127.0.0.1:5000/api/kategori/${id_kategori}`,
-            { method: "DELETE" },
+            `${URL}/api/kategori/${id_kategori}`,
+            { method: "DELETE", headers: { "ngrok-skip-browser-warning": "true" } },
           );
           const result = await res.json();
 
