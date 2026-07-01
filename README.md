@@ -1,2 +1,51 @@
-# libtech-library-system
-School Library Management System (LibTech). Built with React.js &amp; Express. Features include Real-time Analytics Dashboard, Role-Based Access Control, and Smart Circulation. 
+# 📚 LibTech - Sistem Manajemen Perpustakaan Terpadu
+
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-00000F?style=for-the-badge&logo=mysql&logoColor=white)
+
+**LibTech** adalah sistem informasi manajemen perpustakaan modern berskala *Enterprise* yang dirancang khusus untuk memenuhi kebutuhan sirkulasi, manajemen katalog, dan analitik di lingkungan sekolah (Siswa, Pegawai, dan Pustakawan).
+
+Aplikasi ini dikembangkan untuk memfasilitasi ekosistem literasi digital di **Sekolah Bodhicitta**.
+
+---
+
+## ✨ Fitur Unggulan
+
+- 🔐 **Autentikasi Multi-Peran (RBAC):** Akses spesifik yang dibedakan antara Pustakawan (Admin), Pegawai, dan Siswa.
+- 📈 **Dasbor Analitik Real-Time:** Visualisasi data interaktif menggunakan grafik (*Line Chart, Bar Chart, Doughnut Chart*) untuk memantau tren peminjaman, kategori terpopuler, dan performa sirkulasi.
+- 🔄 **Manajemen Sirkulasi Pintar:** Proses *Approval* (Setujui/Tolak), penyesuaian tenggat waktu fleksibel, dan kalkulasi denda otomatis.
+- 📚 **Katalog Cerdas & Load More:** Katalog buku yang cepat (anti-lag) dilengkapi pencarian cerdas berdasarkan multi-filter.
+- 📤 **Import & Export Excel:** Kemudahan menambah ratusan data buku maupun data pengguna (*User*) dalam sekali klik menggunakan *spreadsheet*.
+- 📧 **Pemulihan Kata Sandi Otomatis:** Fitur lupa *password* yang terintegrasi dengan persetujuan Admin dan pengiriman notifikasi otomatis via Email (Nodemailer).
+- 🌗 **Glassmorphism & Dark Mode:** Antarmuka pengguna (UI) modern yang memanjakan mata, dilengkapi fitur peralihan Mode Terang dan Mode Gelap.
+
+---
+
+## 🛠️ Teknologi yang Digunakan
+
+**Frontend:**
+- [React.js](https://reactjs.org/) (Vite)
+- [Tailwind CSS v3](https://tailwindcss.com/)
+- Recharts (Visualisasi Data)
+- SheetJS / XLSX (Import/Export Data)
+
+**Backend:**
+- [Node.js](https://nodejs.org/) & [Express.js](https://expressjs.com/)
+- [MySQL2](https://www.npmjs.com/package/mysql2) (Prepared Statements & Promise)
+- Nodemailer (SMTP Email Server)
+
+---
+
+## 🚀 Panduan Instalasi (Lokal)
+
+Ikuti langkah-langkah di bawah ini untuk menjalankan aplikasi LibTech di komputer lokal Anda.
+
+### 1. Persiapan Database
+1. Buat database baru di MySQL dengan nama `db_perpus_sekolah`.
+2. *Import* struktur tabel dan *Trigger* dari file `.sql` Anda ke dalam database tersebut.
+
+### 2. Pengaturan Backend (Server)
+1. Buka terminal, masuk ke folder backend: `cd backend`
+2. Instal semua dependensi:
