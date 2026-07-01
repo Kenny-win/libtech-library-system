@@ -48,4 +48,17 @@ Ikuti langkah-langkah di bawah ini untuk menjalankan aplikasi LibTech di kompute
 
 ### 2. Pengaturan Backend (Server)
 1. Buka terminal, masuk ke folder backend: `cd backend`
-2. Instal semua dependensi:
+2. Instal semua dependensi: `npm install`
+3. Jalankan aplikasi web: `npm run dev`
+4. Buka tautan lokal yang diberikan Vite (biasanya `http://localhost:5173`) di *browser* Anda.
+
+---
+
+## 👨‍💻 Pengembang
+
+Sistem ini dirancang dan dikembangkan oleh:
+- **Kenny Calnelius Winata, M.Kom.** - Software Developer & Mandarin Teacher
+- **Shelvy Wu, S.Kom.** - Software Developer
+
+*(Hak Cipta © 2026 Perpustakaan Sekolah)*
+
