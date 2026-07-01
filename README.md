@@ -63,21 +63,27 @@ Backend dibangun menggunakan Node.js dan Express.
 `
 DB_HOST=localhost
 `
+
 `
 DB_USER=root
 `
+
 `
 DB_PASSWORD=
 `
+
 `
 DB_NAME=db_perpus_sekolah
 `
+
 `
 EMAIL_USER=email_resmi_sekolah@gmail.com
 `
+
 `
 EMAIL_PASS=16_digit_app_password_google
 `
+
 5. Jalankan server backend: `node server.js`
 *(Catatan: Jika Anda telah memasang `nodemon` di package.json, Anda dapat menggunakan perintah `npm run dev` agar server otomatis me-restart saat ada perubahan kode).*
    
