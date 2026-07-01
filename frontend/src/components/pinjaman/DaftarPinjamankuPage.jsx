@@ -4,7 +4,7 @@ const DaftarPinjamankuPage = ({ role, currentUser, URL }) => {
   const [riwayatList, setRiwayatList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // STATE FILTER DI SINI 
+  // STATE FILTER DI SINI
   const [searchJudul, setSearchJudul] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
 
@@ -14,14 +14,14 @@ const DaftarPinjamankuPage = ({ role, currentUser, URL }) => {
   const userId = currentUser.id_user;
 
   useEffect(() => {
-    const fetchRiwayatPinjaman = async () => {
+    const fetchRiwayatPinjaman = async (isBackground = false) => {
       try {
-        setLoading(true);
-        const res = await fetch(
-          `${URL}/api/peminjaman/user/${userId}`, {
-            headers: { "ngrok-skip-browser-warning": "true" }
-          }
-        );
+        if (!isBackground) setLoading(true);
+
+        // Gunakan variabel userId di sini
+        const res = await fetch(`${URL}/api/peminjaman/user/${userId}`, {
+          headers: { "ngrok-skip-browser-warning": "true" },
+        });
         const result = await res.json();
 
         if (result.success) {
@@ -29,13 +29,21 @@ const DaftarPinjamankuPage = ({ role, currentUser, URL }) => {
         }
         // eslint-disable-next-line no-unused-vars
       } catch (err) {
-        alert("Gagal memuat riwayat peminjaman Anda");
+        if (!isBackground) alert("Gagal memuat riwayat peminjaman Anda");
       } finally {
-        setLoading(false);
+        if (!isBackground) setLoading(false);
       }
     };
 
-    fetchRiwayatPinjaman();
+    fetchRiwayatPinjaman(false);
+
+    const intervalId = setInterval(() => {
+      fetchRiwayatPinjaman(true);
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+
+    // Pastikan dependency array menggunakan userId
   }, [URL, userId]);
 
   const hitungHariTerlambat = (tenggat) => {
@@ -50,7 +58,7 @@ const DaftarPinjamankuPage = ({ role, currentUser, URL }) => {
     return selisihHari > 0 ? selisihHari : 0;
   };
 
-  // LOGIKA FILTERING DATA (PENCARIAN & STATUS) 
+  // LOGIKA FILTERING DATA (PENCARIAN & STATUS)
   const filteredRiwayat = riwayatList.filter((item) => {
     // Cek apakah buku ini sedang telat
     const isTerlambat =

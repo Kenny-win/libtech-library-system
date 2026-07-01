@@ -595,7 +595,7 @@ const DasborAnalitikPage = ({ isDarkMode, URL }) => {
             </div>
           </div>
 
-          <div className="h-72 w-full relative flex flex-col justify-between">
+          <div className="min-h-72 max-h-96 w-full relative flex flex-col justify-between overflow-y-auto pr-2">
             {loading && (
               <div className="absolute inset-0 z-10 bg-white/70 backdrop-blur-xs flex items-center justify-center">
                 <span className="text-slate-500 font-bold text-sm animate-pulse">

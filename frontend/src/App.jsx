@@ -16,7 +16,7 @@ import Footer from "./components/Footer";
 import ManajemenUserPage from "./components/user_and_authentication/ManajemenUserPage";
 
 function App() {
-  // const URL = "http://127.0.0.1:5000" // INI GUNAKAN IP LOCAL 7 PROT : 5000
+  // const URL = "http://127.0.0.1:5000"; // INI GUNAKAN IP LOCAL 7 PROT : 5000
   const URL = "https://shrubs-anthem-parrot.ngrok-free.dev";
   // Rumus: Jam * Menit * Detik * Milidetik (2 jam session)
   const SESSION_DURATION = 2 * 60 * 60 * 1000;
@@ -221,10 +221,20 @@ function App() {
     setActivePage(userData.peran === "admin" ? "dasbor" : "katalog");
   };
 
-  const handleLogout = () => {
+  const performLogout = () => {
     setCurrentUser(null);
     localStorage.removeItem("libtech_user");
     localStorage.removeItem("libtech_expiry");
+  };
+
+  const handleManualLogout = () => {
+    showConfirm(
+      "Konfirmasi Keluar",
+      "Apakah Anda yakin ingin keluar dari portal perpustakaan?",
+      () => {
+        performLogout();
+      },
+    );
   };
 
   // TIMER AUTO-LOGOUT JIKA TAB DIBIARKAN TERBUKA
@@ -238,7 +248,7 @@ function App() {
         // Pastikan sisaWaktu adalah angka yang sah dan lebih dari 0
         if (!isNaN(sisaWaktu) && sisaWaktu > 0) {
           const timeoutId = setTimeout(() => {
-            handleLogout();
+            performLogout();
             showAlert(
               "warning",
               "Sesi Berakhir",
@@ -250,13 +260,13 @@ function App() {
         } else {
           // Jika waktu sudah minus atau rusak, baru logout
           setTimeout(() => {
-            handleLogout();
+            performLogout();
           }, 0);
         }
       } else {
         // Jika tidak ada data waktu, logout demi keamanan
         setTimeout(() => {
-          handleLogout();
+          performLogout();
         }, 0);
       }
     }
@@ -385,7 +395,7 @@ function App() {
       const response = await fetch(`${URL}/api/buku/upload`, {
         method: "POST",
         body: dataKirim,
-        headers: { "ngrok-skip-browser-warning": "true" }
+        headers: { "ngrok-skip-browser-warning": "true" },
       });
       const result = await response.json();
       if (result.success) {
@@ -417,7 +427,7 @@ function App() {
         try {
           const response = await fetch(`${URL}/api/buku/${id_buku}`, {
             method: "DELETE",
-            headers: { "ngrok-skip-browser-warning": "true" }
+            headers: { "ngrok-skip-browser-warning": "true" },
           });
           const result = await response.json();
 
@@ -483,14 +493,6 @@ function App() {
     }
 
     const idUserAsli = currentUser.id_user;
-    // if (!simulasiIdUser) {
-    //   showAlert(
-    //     "warning",
-    //     "Pilih Peran",
-    //     "Pilih simulasi role Pegawai atau Siswa terlebih dahulu.",
-    //   );
-    //   return;
-    // }
 
     // Gunakan showConfirm
     showConfirm(
@@ -500,10 +502,7 @@ function App() {
         try {
           const response = await fetch(`${URL}/api/peminjaman`, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "ngrok-skip-browser-warning": "true",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               id_buku: buku.id_buku,
               id_user: idUserAsli,
@@ -514,10 +513,15 @@ function App() {
           if (result.success) {
             showAlert("success", "Berhasil Diajukan!", result.message);
             setIsDetailModalOpen(false);
+
+            // ---> PERBAIKAN: Refresh Katalog agar stok buku langsung berkurang di layar <---
+            // Sebelumnya ini di-komen/tidak ada. Sekarang wajib dinyalakan!
+            setRefreshTrigger((prev) => prev + 1);
           } else {
-            showAlert("error", "Gagal", result.message);
+            // Akan memunculkan peringatan jika User mencoba meminjam buku yang sama
+            showAlert("warning", "Tidak Dapat Meminjam", result.message);
           }
-          // eslint-disable-next-line no-unused-vars
+        // eslint-disable-next-line no-unused-vars
         } catch (err) {
           showAlert(
             "error",
@@ -554,7 +558,7 @@ function App() {
       <Navbar
         role={role}
         currentUser={currentUser}
-        onLogout={handleLogout}
+        onLogout={handleManualLogout}
         activePage={activePage}
         setActivePage={setActivePage}
         isDarkMode={isDarkMode}

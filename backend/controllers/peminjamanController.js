@@ -56,20 +56,35 @@ const createPeminjaman = async (req, res) => {
   const { id_buku, id_user } = req.body;
 
   try {
-    // Validasi sederhana
     if (!id_buku || !id_user) {
       return res.status(400).json({ success: false, message: "Buku dan User harus diisi" });
     }
 
-    // Insert ke tabel peminjaman
-    // CURDATE() = tanggal hari ini di MySQL
-    // DATE_ADD(CURDATE(), INTERVAL 7 DAY) = tenggat waktu otomatis 7 hari ke depan
+    // ---> VALIDASI 1: Cek apakah stok buku masih ada <---
+    const [bukuCek] = await db.query("SELECT stok FROM buku WHERE id_buku = ?", [id_buku]);
+    if (bukuCek.length === 0 || bukuCek[0].stok <= 0) {
+      return res.status(400).json({ success: false, message: "Maaf, stok buku ini sudah habis dipinjam pengguna lain." });
+    }
+
+    // ---> VALIDASI 2: Cek apakah user ini sedang meminjam atau menunggu persetujuan BUKU YANG SAMA <---
+    const [pinjamanCek] = await db.query(
+      "SELECT id_peminjaman FROM peminjaman WHERE id_user = ? AND id_buku = ? AND status IN ('pending', 'menunggu', 'dipinjam')",
+      [id_user, id_buku]
+    );
+    if (pinjamanCek.length > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Anda masih memiliki pengajuan 'Pending' atau sedang meminjam buku ini. Silakan kembalikan buku terlebih dahulu jika ingin meminjam ulang." 
+      });
+    }
+
+    // ---> Jika lolos validasi, masukkan ke database <---
     const query = `
       INSERT INTO peminjaman (id_user, id_buku, tanggal_pinjam, tanggal_harus_kembali, status)
       VALUES (?, ?, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 7 DAY), 'pending')
     `;
     
-    const [result] = await db.query(query, [id_user, id_buku]);
+    await db.query(query, [id_user, id_buku]);
 
     res.status(201).json({ 
       success: true, 

@@ -24,11 +24,13 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL }) => {
   });
   const [sortOrder, setSortOrder] = useState("terbaru");
 
-  // Fetch Data dari Backend
+  // Fetch Data dari Backend dengan fitur Auto-Refresh (Silent Polling)
   useEffect(() => {
-    const fetchPinjaman = async () => {
+    // Kita tambahkan parameter isBackground agar saat auto-refresh, tulisan "Loading..." tidak muncul
+    const fetchPinjaman = async (isBackground = false) => {
       try {
-        setLoading(true);
+        if (!isBackground) setLoading(true); // Hanya loading saat pertama kali buka halaman
+
         const res = await fetch(`${URL}/api/peminjaman`, {
           headers: { "ngrok-skip-browser-warning": "true" },
         });
@@ -37,16 +39,24 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL }) => {
         if (result.success) {
           setPinjamanList(result.data);
         }
-        // eslint-disable-next-line no-unused-vars
       } catch (err) {
-        showAlert("error", "Kesalahan Teknis", "Gagal memuat data peminjaman");
+        console.error("Gagal memuat data sirkulasi di background", err);
       } finally {
-        setLoading(false);
+        if (!isBackground) setLoading(false);
       }
     };
 
-    fetchPinjaman();
-  }, [URL, refreshTrigger, showAlert]);
+    // Panggil data untuk pertama kali saat halaman dibuka
+    fetchPinjaman(false);
+
+    // Buat pewaktu (Timer) untuk mengambil data baru setiap 5 detik secara diam-diam
+    const intervalId = setInterval(() => {
+      fetchPinjaman(true); // isBackground = true (layar tidak akan berkedip)
+    }, 5000); // 5000 milidetik = 5 detik
+
+    // Bersihkan timer jika Admin pindah ke halaman lain agar memori tidak bocor
+    return () => clearInterval(intervalId);
+  }, [URL, refreshTrigger]);
 
   // Fungsi menghitung keterlambatan saat ini (berjalan) wajib di atas fungsi filteredPinjamanList
   const hitungHariTerlambat = (tenggat) => {
