@@ -29,7 +29,7 @@ Aplikasi ini dikembangkan untuk memfasilitasi ekosistem literasi digital di **Se
 - [React.js](https://reactjs.org/) (Vite)
 - [Tailwind CSS v3](https://tailwindcss.com/)
 - Recharts (Visualisasi Data)
-- SheetJS / XLSX (Import/Export Data)
+- Multer / XLSX (Import/Export Data)
 
 **Backend:**
 - [Node.js](https://nodejs.org/) & [Express.js](https://expressjs.com/)
@@ -42,16 +42,43 @@ Aplikasi ini dikembangkan untuk memfasilitasi ekosistem literasi digital di **Se
 
 Ikuti langkah-langkah di bawah ini untuk menjalankan aplikasi LibTech di komputer lokal Anda.
 
-### 1. Persiapan Database
+### Persiapan Database
 1. Buat database baru di MySQL dengan nama `db_perpus_sekolah`.
 2. *Import* struktur tabel dan *Trigger* dari file `.sql` Anda ke dalam database tersebut.
 
-### 2. Pengaturan Backend (Server)
-1. Buka terminal, masuk ke folder backend: `cd backend`
-2. Instal semua dependensi: `npm install`
-3. Jalankan aplikasi web: `npm run dev`
-4. Buka tautan lokal yang diberikan Vite (biasanya `http://localhost:5173`) di *browser* Anda.
+## 🚀 Panduan Instalasi (Lokal)
 
+Ikuti langkah-langkah di bawah ini untuk menjalankan aplikasi LibTech di komputer lokal Anda.
+
+### 1. Persiapan Database (MySQL)
+1. Buka XAMPP / Laragon, nyalakan modul **MySQL**.
+2. Buat database baru di MySQL dengan nama `db_perpus_sekolah`.
+3. *Import* struktur tabel dan *Trigger* dari file `.sql` *backup* Anda ke dalam database tersebut.
+
+### 2. Pengaturan Backend (Server API)
+Backend dibangun menggunakan Node.js dan Express.
+1. Buka terminal, arahkan ke folder backend: `cd backend`.
+2. Instal semua dependensi pendukung: `npm install`
+3. Buat file `.env` di dalam folder `backend/` dan isi dengan konfigurasi database serta kredensial email Anda:
+`
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=db_perpus_sekolah
+EMAIL_USER=email_resmi_sekolah@gmail.com
+EMAIL_PASS=16_digit_app_password_google
+`
+4. Jalankan server backend: `node server.js`
+*(Catatan: Jika Anda telah memasang `nodemon` di package.json, Anda dapat menggunakan perintah `npm run dev` agar server otomatis me-restart saat ada perubahan kode).*
+   
+   Server backend akan berjalan di **`http://localhost:5000`**.
+   
+### 3. Pengaturan Frontend (Client UI)
+Frontend dibangun menggunakan React.js dan Vite.
+1. Buka terminal baru, arahkan ke folder frontend: `cd frontend`
+2. Instal semua dependensi UI dan Library (seperti Tailwind, Recharts, dll): `npm install`
+3. Jalankan server pengembangan Vite: `npm run dev`
+4. Buka tautan lokal yang diberikan Vite di terminal (biasanya **`http://localhost:5173`**) melalui *browser* Anda.
 ---
 
 ## 👨‍💻 Pengembang
