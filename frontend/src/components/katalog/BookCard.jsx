@@ -56,7 +56,7 @@ const BookCard = ({ buku, onDetailClick, role, onPinjamClick }) => {
             Stok
           </span>
           <span
-            className={`text-sm dark:text-white font-black block ${buku.stok > 0 ? "text-slate-900" : "text-rose-600"}`}
+            className={`text-sm font-black block ${buku.stok > 0 ? "text-slate-900 dark:text-white" : "text-rose-600 dark:text-rose-600 dark"}`}
           >
             {buku.stok} Eks
           </span>

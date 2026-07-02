@@ -23,7 +23,10 @@ const LoginPage = ({ onLoginSuccess, showAlert, URL }) => {
       setIsLoading(true);
       const response = await fetch(`${URL}/api/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
         body: JSON.stringify({ email, password }),
       });
 
@@ -38,8 +41,8 @@ const LoginPage = ({ onLoginSuccess, showAlert, URL }) => {
     } catch (err) {
       showAlert(
         "error",
-        "Koneksi Terputus",
-        "Tidak dapat terhubung ke server.",
+        "Website Sedang Dalam Pemeliharaan",
+        "Maaf, server perpustakaan saat ini sedang dalam pemeliharaan (maintenance) atau tidak dapat diakses. Silakan coba beberapa saat lagi.",
       );
     } finally {
       setIsLoading(false);
@@ -60,14 +63,14 @@ const LoginPage = ({ onLoginSuccess, showAlert, URL }) => {
 
     try {
       // Tembak API menggunakan email yang sudah diketik user
-      const response = await fetch(
-        `${URL}/api/auth/lupa-password`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
-          body: JSON.stringify({ email: email }),
+      const response = await fetch(`${URL}/api/auth/lupa-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
         },
-      );
+        body: JSON.stringify({ email: email }),
+      });
 
       const result = await response.json();
 
@@ -76,12 +79,12 @@ const LoginPage = ({ onLoginSuccess, showAlert, URL }) => {
       } else {
         showAlert("warning", "Gagal", result.message);
       }
-    // eslint-disable-next-line no-unused-vars
+      // eslint-disable-next-line no-unused-vars
     } catch (err) {
       showAlert(
         "error",
-        "Koneksi Terputus",
-        "Tidak dapat terhubung ke server.",
+        "Website Sedang Dalam Pemeliharaan",
+        "Tidak dapat mengirim pengajuan karena server sedang dalam pemeliharaan. Coba lagi nanti.",
       );
     }
   };

@@ -83,26 +83,26 @@ const BookDetailModal = ({
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex flex-col pt-4 mt-4 border-t border-slate-100 gap-4">
               <div>
                 <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">
                   Total Ketersediaan
                 </span>
                 <span
-                  className={`text-lg font-black ${buku.stok > 0 ? "text-slate-900" : "text-rose-600"}`}
+                  className={`text-xl font-black block ${buku.stok > 0 ? "text-slate-900" : "text-rose-600"}`}
                 >
                   {buku.stok} Eksemplar
                 </span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2 justify-end w-full">
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors cursor-pointer"
+                  className="px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   Tutup
                 </button>
-                {/* LOGIKA TOMBOL BERDASARKAN ROLE */}
-                {role === "admin" ? (
+
+                {role === "admin" && (
                   <>
                     <button
                       onClick={() => onEditClick(buku)}
@@ -117,19 +117,19 @@ const BookDetailModal = ({
                       Hapus
                     </button>
                   </>
-                ) : (
-                  <button
-                    disabled={buku.stok <= 0}
-                    onClick={() => onPinjamClick(buku)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold text-white shadow-xs transition-all cursor-pointer ${
-                      buku.stok > 0
-                        ? "bg-blue-600 hover:bg-blue-700"
-                        : "bg-slate-200 text-slate-400 cursor-not-allowed"
-                    }`}
-                  >
-                    Proses Pinjam
-                  </button>
                 )}
+
+                <button
+                  disabled={buku.stok <= 0}
+                  onClick={() => onPinjamClick(buku)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold text-white shadow-xs transition-all cursor-pointer ${
+                    buku.stok > 0
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : "bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed"
+                  }`}
+                >
+                  {buku.stok > 0 ? "Pinjam" : "Habis"}
+                </button>
               </div>
             </div>
           </div>

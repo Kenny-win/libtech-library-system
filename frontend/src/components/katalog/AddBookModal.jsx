@@ -14,6 +14,8 @@ const AddBookModal = ({
 }) => {
   if (!isOpen) return null;
 
+  const tahunSekarang = new Date().getFullYear();
+
   const handleDownloadTemplate = () => {
     const headers = [
       "Judul",
@@ -186,6 +188,8 @@ const AddBookModal = ({
                   onChange={handleInputChange}
                   placeholder="2010"
                   required
+                  max={tahunSekarang}
+                  min="1000"
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:border-blue-500"
                 />
               </div>

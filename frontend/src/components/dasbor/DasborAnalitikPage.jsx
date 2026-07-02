@@ -15,7 +15,7 @@ import {
   Legend,
 } from "recharts";
 
-const DasborAnalitikPage = ({ isDarkMode, URL }) => {
+const DasborAnalitikPage = ({ isDarkMode, URL, setActivePage }) => {
   const [dataTren, setDataTren] = useState([]);
   const [dataKategori, setDataKategori] = useState([]);
   const [dataStatus, setDataStatus] = useState([]);
@@ -51,6 +51,8 @@ const DasborAnalitikPage = ({ isDarkMode, URL }) => {
     Pending: "#f59e0b", // Kuning Amber
     Ditolak: "#94a3b8", // Abu-abu Slate
   };
+
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     const fetchAnalitik = async () => {
@@ -146,6 +148,36 @@ const DasborAnalitikPage = ({ isDarkMode, URL }) => {
     URL,
   ]); //TODO INI ADA TAMBAH URL
 
+  useEffect(() => {
+    const cekPeminjamanBaru = async () => {
+      try {
+        const res = await fetch(`${URL}/api/peminjaman`, {
+          headers: { "ngrok-skip-browser-warning": "true" },
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          // Hitung berapa banyak yang statusnya masih 'pending'
+          const jumlahPending = result.data.filter(
+            (item) => item.status === "pending" || item.status === "menunggu",
+          ).length;
+          setPendingCount(jumlahPending);
+        }
+        // eslint-disable-next-line no-unused-vars
+      } catch (err) {
+        console.error("Gagal mengecek notifikasi");
+      }
+    };
+
+    // Cek saat halaman pertama dibuka
+    cekPeminjamanBaru();
+
+    // Cek berulang setiap 5 detik secara diam-diam
+    const intervalId = setInterval(cekPeminjamanBaru, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [URL]);
+
   // LOGIKA SLIDER (PAGINATION)
   const itemsPerSlide = 5;
   const totalSlides = Math.ceil(dataLeaderboard.length / itemsPerSlide);
@@ -176,6 +208,32 @@ const DasborAnalitikPage = ({ isDarkMode, URL }) => {
 
   return (
     <div>
+      {/* BANNER NOTIFIKASI (Hanya muncul jika ada pending)*/}
+      {pendingCount > 0 && (
+        <div className="mb-6 bg-blue-50 border border-blue-200 p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fadeIn transition-colors dark:bg-blue-900/30 dark:border-blue-800">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-800/50 flex items-center justify-center text-2xl animate-bounce">
+              🔔
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-blue-800 dark:text-blue-300 tracking-wide uppercase">
+                Ada Peminjaman Baru!
+              </h3>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
+                Terdapat{" "}
+                <span className="font-extrabold text-lg">{pendingCount}</span>{" "}
+                pengajuan buku yang menunggu persetujuan Anda.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setActivePage("peminjaman")}
+            className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md hover:-translate-y-0.5 transition-all cursor-pointer"
+          >
+            Lihat Halaman Peminjaman ➡️
+          </button>
+        </div>
+      )}
       <div className="mb-6">
         <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight transition-colors">
           Dasbor Analitik
