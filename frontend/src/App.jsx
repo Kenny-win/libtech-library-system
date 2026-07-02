@@ -16,8 +16,8 @@ import Footer from "./components/Footer";
 import ManajemenUserPage from "./components/user_and_authentication/ManajemenUserPage";
 
 function App() {
-  const URL = "http://127.0.0.1:5000"; // INI GUNAKAN IP LOCAL 7 PROT : 5000
-  // const URL = "https://shrubs-anthem-parrot.ngrok-free.dev";
+  // const URL = "http://127.0.0.1:5000"; // INI GUNAKAN IP LOCAL 7 PROT : 5000
+  const URL = "https://shrubs-anthem-parrot.ngrok-free.dev";
   // Rumus: Jam * Menit * Detik * Milidetik (2 jam session)
   const SESSION_DURATION = 2 * 60 * 60 * 1000;
   const [currentUser, setCurrentUser] = useState(() => {
