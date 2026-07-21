@@ -39,9 +39,15 @@ const BookCard = ({ buku, onDetailClick, role, onPinjamClick }) => {
           >
             {buku.judul}
           </h3>
-          <p className="text-xs dark:text-slate-200 text-slate-500" title={buku.penulis}>
+          {/* Kembalikan ini menjadi teks biasa */}
+          <p
+            className="text-xs text-slate-500 dark:text-slate-400 truncate"
+            title={buku.penulis}
+          >
             Oleh:{" "}
-            <span className="font-semibold dark:text-slate-300 text-slate-700">{buku.penulis}</span>
+            <span className="font-semibold text-slate-700 dark:text-slate-300">
+              {buku.penulis}
+            </span>
           </p>
         </div>
         <div className="bg-slate-50 p-2 rounded-xl text-xs text-slate-600 flex justify-between items-center border border-slate-100 font-medium mt-3">
@@ -52,14 +58,36 @@ const BookCard = ({ buku, onDetailClick, role, onPinjamClick }) => {
       </div>
       <div className="px-4 py-3 bg-slate-50/50 dark:bg-slate-800 border-t border-slate-100 flex items-center justify-between">
         <div className="flex-1 pr-2">
-          <span className="text-[10px] text-slate-400 dark:text-slate-200 font-bold uppercase tracking-wider block">
-            Stok
+          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">
+            Stok & Rating
           </span>
-          <span
-            className={`text-sm font-black block ${buku.stok > 0 ? "text-slate-900 dark:text-white" : "text-rose-600 dark:text-rose-600 dark"}`}
-          >
-            {buku.stok} Eks
-          </span>
+
+          {/* ---> BUNGKUS DENGAN FLEX AGAR RATING ADA DI SAMPING KANAN "EKS" <--- */}
+          <div className="flex items-center gap-2">
+            <span
+              className={`text-sm font-black block ${buku.stok > 0 ? "text-slate-900 dark:text-slate-100" : "text-rose-600 dark:text-rose-400"}`}
+            >
+              {buku.stok} Eks
+            </span>
+
+            {/* Munculkan rating hanya jika buku tersebut sudah pernah diulas */}
+            {buku.total_ulasan > 0 && (
+              <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-md border border-amber-100 dark:border-amber-800 shrink-0 transition-colors">
+                <span className="text-[10px]">⭐</span>
+                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                  {Number(buku.rating_rata).toFixed(1)}
+                </span>
+              </div>
+            )}
+            {buku.total_ulasan == 0 && (
+              <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-md border border-amber-100 dark:border-amber-800 shrink-0 transition-colors">
+                <span className="text-[10px]">⭐</span>
+                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                  0
+                </span>
+              </div>
+            )}
+          </div>
         </div>
         {/* LOGIKA ROLE: Jika role bukan admin, tampilkan tombol pinjam */}
         {role !== "admin" && (

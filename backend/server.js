@@ -26,6 +26,8 @@ const peminjamanRoutes = require('./routes/peminjamanRoutes');
 const analitikRoutes = require('./routes/analitikRoutes');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const ulasanRoutes = require('./routes/ulasanRoutes');
+const feedbackRoutes = require('./routes/feedbackRoutes');
 
 // Konfigurasi Koneksi MySQL Pool
 const db = mysql.createPool({
@@ -77,6 +79,8 @@ app.use('/api/kategori', kategoriRoutes);
 app.use('/api/peminjaman', peminjamanRoutes);
 app.use('/api/analitik', analitikRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/ulasan', ulasanRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 // Menjalankan Server
 const PORT = process.env.PORT || 5000;

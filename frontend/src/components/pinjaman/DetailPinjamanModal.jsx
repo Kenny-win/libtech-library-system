@@ -1,6 +1,12 @@
 import { useState } from "react";
 
-const DetailPinjamanModal = ({ isOpen, pinjaman, onClose, onUpdateStatus, showAlert }) => {
+const DetailPinjamanModal = ({
+  isOpen,
+  pinjaman,
+  onClose,
+  onUpdateStatus,
+  showAlert,
+}) => {
   // BUAT FUNGSI HELPER UNTUK ZONA WAKTU LOKAL
   const getLocalDateString = (dateString) => {
     if (!dateString) return "";
@@ -134,6 +140,17 @@ const DetailPinjamanModal = ({ isOpen, pinjaman, onClose, onUpdateStatus, showAl
                 </span>
               </div>
             </div>
+            
+            {pinjaman.status === "ditolak" && pinjaman.keterangan && (
+              <div className="mb-4 bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800 p-3 rounded-xl transition-colors">
+                <span className="block text-[10px] uppercase font-bold text-rose-700 dark:text-rose-400 mb-1">
+                  Alasan Penolakan:
+                </span>
+                <span className="block text-sm text-rose-600 dark:text-rose-300 font-semibold italic">
+                  "{pinjaman.keterangan}"
+                </span>
+              </div>
+            )}
 
             {/* BLOK INFO DENDA DI SINI*/}
             {pinjaman.status === "kembali" && pinjaman.denda > 0 && (
@@ -231,7 +248,8 @@ const DetailPinjamanModal = ({ isOpen, pinjaman, onClose, onUpdateStatus, showAl
                 <button
                   onClick={() => {
                     if (tenggatKembali < minDate) {
-                      showAlert("warning",
+                      showAlert(
+                        "warning",
                         "Tenggat kembali tidak boleh lebih awal dari tanggal pinjam!",
                       );
                       return;

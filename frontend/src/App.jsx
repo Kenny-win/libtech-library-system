@@ -14,10 +14,12 @@ import LoginPage from "./components/user_and_authentication/LoginPage";
 import ResetPasswordPage from "./components/user_and_authentication/ResetPasswordPage";
 import Footer from "./components/Footer";
 import ManajemenUserPage from "./components/user_and_authentication/ManajemenUserPage";
+import CustomPrompt from "./components/alert/CustomPrompt";
+import FeedbackPage from "./components/feedback/FeedbackPage";
 
 function App() {
-  // const URL = "http://127.0.0.1:5000"; // INI GUNAKAN IP LOCAL 7 PROT : 5000
-  const URL = "https://shrubs-anthem-parrot.ngrok-free.dev";
+  const URL = "http://127.0.0.1:5000"; // INI GUNAKAN IP LOCAL 7 PROT : 5000
+  // const URL = "https://shrubs-anthem-parrot.ngrok-free.dev";
   // Rumus: Jam * Menit * Detik * Milidetik (2 jam session)
   const SESSION_DURATION = 2 * 60 * 60 * 1000;
   const [currentUser, setCurrentUser] = useState(() => {
@@ -108,6 +110,7 @@ function App() {
     penerbit: "",
     isbn: "",
     id_kategori: "",
+    rating: "",
   });
 
   const [sortOrder, setSortOrder] = useState("asc"); // Default: A-Z
@@ -130,6 +133,20 @@ function App() {
   const showAlert = (type, title, message) => {
     setAlertData({ isOpen: true, type, title, message, onConfirm: null });
   };
+  // ---> STATE UNTUK CUSTOM PROMPT <---
+  const [promptData, setPromptData] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onSubmit: null,
+  });
+
+  const showPrompt = (title, message, onSubmitCallback) => {
+    setPromptData({ isOpen: true, title, message, onSubmit: onSubmitCallback });
+  };
+
+  const closePrompt = () =>
+    setPromptData((prev) => ({ ...prev, isOpen: false }));
 
   const showConfirm = (title, message, onConfirmCallback) => {
     setAlertData({
@@ -286,6 +303,7 @@ function App() {
       penerbit: "",
       isbn: "",
       id_kategori: "",
+      rating: "",
     });
     setBatasTampil(12); // Reset batas tampil
   };
@@ -323,14 +341,21 @@ function App() {
       false;
     const matchIsbn =
       buku.isbn?.toLowerCase().includes(filters.isbn.toLowerCase()) ?? false;
+    const matchRating =
+      filters.rating === "" ||
+      Number(buku.rating_rata) >= Number(filters.rating);
 
-    // Untuk kategori, pastikan id disamakan tipe datanya (string)
     const matchKategori =
       filters.id_kategori === "" ||
       String(buku.id_kategori) === String(filters.id_kategori);
 
     return (
-      matchJudul && matchPenulis && matchPenerbit && matchIsbn && matchKategori
+      matchJudul &&
+      matchPenulis &&
+      matchPenerbit &&
+      matchIsbn &&
+      matchKategori &&
+      matchRating
     );
   });
 
@@ -343,6 +368,10 @@ function App() {
       return b.judul.localeCompare(a.judul); // Z - A
     } else if (sortOrder === "terbaru") {
       return b.id_buku - a.id_buku;
+    } else if (sortOrder === "rating_desc") {
+      return Number(b.rating_rata) - Number(a.rating_rata); // Rating Tertinggi ke Terendah
+    } else if (sortOrder === "rating_asc") {
+      return Number(a.rating_rata) - Number(b.rating_rata); // Rating Terendah ke Tertinggi
     }
     return 0;
   });
@@ -521,7 +550,7 @@ function App() {
             // Akan memunculkan peringatan jika User mencoba meminjam buku yang sama
             showAlert("warning", "Tidak Dapat Meminjam", result.message);
           }
-        // eslint-disable-next-line no-unused-vars
+          // eslint-disable-next-line no-unused-vars
         } catch (err) {
           showAlert(
             "error",
@@ -696,6 +725,7 @@ function App() {
             showAlert={showAlert}
             showConfirm={showConfirm}
             URL={URL}
+            showPrompt={showPrompt}
           />
         )}
         {activePage === "pinjamanku" && (
@@ -713,7 +743,11 @@ function App() {
           />
         )}
         {activePage === "dasbor" && role === "admin" && (
-          <DasborAnalitikPage setActivePage={setActivePage} isDarkMode={isDarkMode} URL={URL} />
+          <DasborAnalitikPage
+            setActivePage={setActivePage}
+            isDarkMode={isDarkMode}
+            URL={URL}
+          />
         )}
         {activePage === "reset-password" && role === "admin" && (
           <ResetPasswordPage
@@ -729,6 +763,15 @@ function App() {
             URL={URL}
           />
         )}
+        {activePage === "feedback" && (
+          <FeedbackPage
+            role={role}
+            currentUser={currentUser}
+            showAlert={showAlert}
+            showConfirm={showConfirm}
+            URL={ URL }
+          />
+        )}
       </main>
 
       <Footer />
@@ -741,6 +784,9 @@ function App() {
         onEditClick={handleEditClick}
         onDeleteClick={handleDeleteBuku}
         onPinjamClick={handlePinjamBuku}
+        currentUser={currentUser}
+        showAlert={showAlert}
+        URL={URL}
       />
 
       <AddBookModal
@@ -763,6 +809,14 @@ function App() {
         message={alertData.message}
         onClose={closeAlert}
         onConfirm={alertData.onConfirm}
+      />
+
+      <CustomPrompt
+        isOpen={promptData.isOpen}
+        title={promptData.title}
+        message={promptData.message}
+        onClose={closePrompt}
+        onSubmit={promptData.onSubmit}
       />
     </div>
   );

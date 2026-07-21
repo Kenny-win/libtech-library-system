@@ -27,7 +27,7 @@ const Navbar = ({
               />
             </div>
 
-            <div className="ml-4 xl:ml-8 hidden xl:flex gap-4 xl:gap-6 border-l border-slate-200 dark:border-slate-600 pl-4 xl:pl-8 items-center">
+            <div className="ml-3 xl:ml-4 hidden xl:flex gap-2 xl:gap-3 border-l border-slate-200 dark:border-slate-600 pl-3 xl:pl-4 items-center">
               {role === "admin" && (
                 <button
                   onClick={() => setActivePage("dasbor")}
@@ -127,11 +127,22 @@ const Navbar = ({
                   </div>
                 </>
               )}
+              {/* Tambahkan ini di deretan tombol menu desktop (untuk Admin dan bukan Admin) */}
+              <button
+                onClick={() => setActivePage("feedback")}
+                className={`text-sm font-bold whitespace-nowrap transition-colors cursor-pointer ${
+                  activePage === "feedback"
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-slate-500 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400"
+                }`}
+              >
+                💬 Umpan Balik
+              </button>
             </div>
           </div>
 
           {/* BAGIAN KANAN: Tombol Dark Mode, Profil & Logout */}
-          <div className="flex items-center gap-3 md:gap-4 shrink-0 ml-4">
+          <div className="flex items-center gap-2 md:gap-3 shrink-0 ml-4">
             <button
               onClick={toggleDarkMode}
               className="p-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-amber-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors cursor-pointer"
@@ -173,15 +184,18 @@ const Navbar = ({
             </button>
 
             {currentUser && (
-              <div className="hidden sm:flex flex-col items-end border-l border-slate-200 dark:border-slate-600 pl-4">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+              <div className="hidden sm:flex flex-col items-end border-l border-slate-200 dark:border-slate-600 pl-3 md:pl-4 min-w-0 max-w-20 sm:max-w-30 lg:max-w-37.5">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider truncate w-full text-right">
                   {currentUser.peran === "admin"
                     ? "Pustakawan"
                     : currentUser.peran === "pegawai"
                       ? "Pegawai"
                       : "Siswa"}
                 </span>
-                <span className="text-xs font-black text-slate-800 dark:text-slate-100 whitespace-nowrap">
+                <span
+                  className="text-xs font-black text-slate-800 dark:text-slate-100 truncate w-full text-right"
+                  title={currentUser.nama}
+                >
                   {currentUser.nama}
                 </span>
               </div>
@@ -189,7 +203,7 @@ const Navbar = ({
 
             <button
               onClick={onLogout}
-              className="text-[11px] md:text-xs font-bold bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-100 dark:hover:bg-rose-800/50 text-rose-600 dark:text-rose-400 px-3 py-1.5 md:px-4 md:py-2 rounded-xl border border-rose-200 dark:border-rose-800 cursor-pointer transition-colors whitespace-nowrap"
+              className="shrink-0 text-[11px] md:text-xs font-bold bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-100 dark:hover:bg-rose-800/50 text-rose-600 dark:text-rose-400 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-800 cursor-pointer transition-colors whitespace-nowrap"
             >
               Keluar
             </button>

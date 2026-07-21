@@ -296,6 +296,16 @@ const DaftarPinjamankuPage = ({ role, currentUser, URL }) => {
                     </span>
                   </div>
                 )}
+                {item.status === "ditolak" && item.keterangan && (
+                  <div className="px-4 py-3 bg-rose-50 border-t border-rose-100 flex flex-col justify-center transition-colors dark:bg-rose-900/20 dark:border-rose-800">
+                    <span className="block text-[10px] font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider mb-1">
+                      Alasan Penolakan:
+                    </span>
+                    <span className="text-xs font-semibold text-rose-600 dark:text-rose-300 italic">
+                      "{item.keterangan}"
+                    </span>
+                  </div>
+                )}
               </div>
             );
           })}

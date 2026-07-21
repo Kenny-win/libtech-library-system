@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import DetailPinjamanModal from "./DetailPinjamanModal";
 
-const DaftarPinjamanPage = ({ showAlert, showConfirm, URL }) => {
+const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
   const [pinjamanList, setPinjamanList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -71,53 +71,64 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL }) => {
     return selisihHari > 0 ? selisihHari : 0;
   };
 
-  // Fungsi Handler Status Peminjaman
-  const handleUpdateStatus = async (
-    id_peminjaman,
-    statusBaru,
-    tanggal_harus_kembali = null,
-  ) => {
-    // const confirmMsg = `Ubah status menjadi ${statusBaru.toUpperCase()}?`;
-    // if (!window.confirm(confirmMsg)) return;
-    showConfirm(
-      "Update Status",
-      `Ubah status menjadi ${statusBaru.toUpperCase()}?`,
-      async () => {
-        try {
-          const res = await fetch(
-            `${URL}/api/peminjaman/${id_peminjaman}/status`,
-            {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-                "ngrok-skip-browser-warning": "true",
-              },
-              body: JSON.stringify({
-                status: statusBaru,
-                tanggal_harus_kembali,
-              }),
-            },
-          );
-          const result = await res.json();
 
-          if (result.success) {
-            showAlert("success", "Status Berhasil Diubah", result.message);
+  const handleUpdateStatus = async (id_peminjaman, statusBaru, tanggal_harus_kembali = null) => {
+    const eksekusiUpdate = async (keteranganTambahan = null) => {
+      try {
+        const res = await fetch(`${URL}/api/peminjaman/${id_peminjaman}/status`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "true",
+          },
+          body: JSON.stringify({
+            status: statusBaru,
+            tanggal_harus_kembali,
+            keterangan: keteranganTambahan,
+          }),
+        });
+        
+        const result = await res.json();
+        if (result.success) {
+          showAlert("success", "Status Berhasil Diubah", result.message);
+          setIsModalOpen(false); // Jika Anda memakai popup detail
+          setRefreshTrigger((prev) => prev + 1);
+        } else {
+          showAlert("error", "Status Gagal Diubah", result.message);
+        }
+      // eslint-disable-next-line no-unused-vars
+      } catch (err) {
+        showAlert("error", "Koneksi Terputus", "Terjadi kesalahan koneksi saat mengubah status.");
+      }
+    };
 
-            setIsModalOpen(false); // Tutup popup otomatis setelah sukses
-            setRefreshTrigger((prev) => prev + 1); // Refresh data tabel
-          } else {
-            showAlert("error", "Status Gagal Diubah", result.message);
+    // ALUR JIKA DITOLAK (Gunakan showPrompt)
+    if (statusBaru === "ditolak") {
+      showPrompt(
+        "Alasan Penolakan",
+        "Silakan tuliskan alasan mengapa peminjaman ini ditolak:",
+        (inputKeterangan) => {
+          if (inputKeterangan.trim() === "") {
+            showAlert("warning", "Alasan Kosong", "Alasan penolakan tidak boleh kosong!");
+            return;
           }
-          // eslint-disable-next-line no-unused-vars
-        } catch (err) {
-          showAlert(
-            "error",
-            "Koneksi Terputus",
-            "Terjadi kesalahan koneksi saat mengubah status.",
+          // Jika alasan diisi, munculkan konfirmasi terakhir
+          showConfirm(
+            "Tolak Pinjaman",
+            "Apakah Anda yakin ingin menolak peminjaman ini?",
+            () => eksekusiUpdate(inputKeterangan)
           );
         }
-      },
-    );
+      );
+    } 
+    // ALUR JIKA SELAIN DITOLAK (Setujui/Kembali)
+    else {
+      showConfirm(
+        "Update Status",
+        `Ubah status menjadi ${statusBaru.toUpperCase()}?`,
+        () => eksekusiUpdate(null)
+      );
+    }
   };
 
   // HANDLER PERUBAHAN FILTER & SORT
