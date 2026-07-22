@@ -330,24 +330,26 @@ function App() {
   // LOGIKA FILTERING DATA
   // Daftar buku yang akan ditampilkan adalah bukuList yang sudah melewati filter
   const filteredBukuList = bukuList.filter((buku) => {
-    // Ubah ke lowercase agar pencarian tidak sensitif huruf besar/kecil
-    const matchJudul =
-      buku.judul?.toLowerCase().includes(filters.judul.toLowerCase()) ?? false;
-    const matchPenulis =
-      buku.penulis?.toLowerCase().includes(filters.penulis.toLowerCase()) ??
-      false;
-    const matchPenerbit =
-      buku.penerbit?.toLowerCase().includes(filters.penerbit.toLowerCase()) ??
-      false;
-    const matchIsbn =
-      buku.isbn?.toLowerCase().includes(filters.isbn.toLowerCase()) ?? false;
-    const matchRating =
-      filters.rating === "" ||
-      Number(buku.rating_rata) >= Number(filters.rating);
+    const matchJudul = (buku.judul || "")
+      .toLowerCase()
+      .includes(filters.judul.toLowerCase());
+    const matchPenulis = (buku.penulis || "")
+      .toLowerCase()
+      .includes(filters.penulis.toLowerCase());
+    const matchPenerbit = (buku.penerbit || "")
+      .toLowerCase()
+      .includes(filters.penerbit.toLowerCase());
+    const matchIsbn = (buku.isbn || "")
+      .toLowerCase()
+      .includes(filters.isbn.toLowerCase());
 
+    // Yang bawah tetap sama
     const matchKategori =
       filters.id_kategori === "" ||
       String(buku.id_kategori) === String(filters.id_kategori);
+    const matchRating =
+      filters.rating === "" ||
+      Number(buku.rating_rata) >= Number(filters.rating);
 
     return (
       matchJudul &&
@@ -769,7 +771,7 @@ function App() {
             currentUser={currentUser}
             showAlert={showAlert}
             showConfirm={showConfirm}
-            URL={ URL }
+            URL={URL}
           />
         )}
       </main>
