@@ -29,6 +29,7 @@ const ManajemenUserPage = ({ showAlert, showConfirm, URL }) => {
     password: "",
     peran: "siswa",
     kelas: "",
+    unit: "Utama",
   });
 
   useEffect(() => {
@@ -122,6 +123,7 @@ const ManajemenUserPage = ({ showAlert, showConfirm, URL }) => {
       Email: u.email,
       Peran: u.peran.toUpperCase(),
       Kelas: u.kelas || "-",
+      Unit: u.unit || "-",
       "Tanggal Daftar": new Date(u.created_at).toLocaleDateString("id-ID"),
     }));
 
@@ -133,6 +135,7 @@ const ManajemenUserPage = ({ showAlert, showConfirm, URL }) => {
       { wch: 25 },
       { wch: 25 },
       { wch: 15 },
+      { wch: 10 },
       { wch: 10 },
       { wch: 15 },
     ];
@@ -149,7 +152,7 @@ const ManajemenUserPage = ({ showAlert, showConfirm, URL }) => {
         try {
           const response = await fetch(`${URL}/api/users/${id_user}`, {
             method: "DELETE",
-            headers: { "ngrok-skip-browser-warning": "true" }
+            headers: { "ngrok-skip-browser-warning": "true" },
           });
           const result = await response.json();
 
@@ -178,6 +181,7 @@ const ManajemenUserPage = ({ showAlert, showConfirm, URL }) => {
       password: "", // Kosong berarti tidak ingin diubah
       peran: user.peran,
       kelas: user.kelas || "",
+      unit: user.unit || "Utama",
     });
     setIsModalOpen(true);
   };
@@ -221,10 +225,35 @@ const ManajemenUserPage = ({ showAlert, showConfirm, URL }) => {
   };
 
   const handleDownloadTemplate = () => {
-    const headers = ["NIS/NIP", "Nama", "Email", "Password", "Peran", "Kelas"];
+    const headers = [
+      "NIS/NIP",
+      "Nama",
+      "Email",
+      "Password",
+      "Peran",
+      "Kelas",
+      "Unit",
+    ];
     const dummyData = [
-      ["12345", "Budi Santoso", "budi@siswa.com", "budi123", "siswa", "IX-1"],
-      ["67890", "Pak Guru", "guru@sekolah.com", "guru123", "pegawai", ""],
+      [
+        "12345",
+        "Budi Santoso",
+        "budi@siswa.com",
+        "budi123",
+        "siswa",
+        "IX-1",
+        "",
+      ],
+      ["67890", "Pak Guru", "guru@sekolah.com", "guru123", "pegawai", "", ""],
+      [
+        "11223",
+        "Admin SD",
+        "adminsd@sekolah.com",
+        "admin123",
+        "admin",
+        "",
+        "SD",
+      ], // Contoh Admin
     ];
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet([headers, ...dummyData]);
@@ -256,7 +285,7 @@ const ManajemenUserPage = ({ showAlert, showConfirm, URL }) => {
           const response = await fetch(`${URL}/api/users/upload`, {
             method: "POST",
             body: formData,
-            headers: { "ngrok-skip-browser-warning": "true" }
+            headers: { "ngrok-skip-browser-warning": "true" },
           });
           const result = await response.json();
 
@@ -491,7 +520,12 @@ const ManajemenUserPage = ({ showAlert, showConfirm, URL }) => {
                               : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
                         }`}
                       >
-                        {u.peran} {u.kelas ? `(${u.kelas})` : ""}
+                        {u.peran}{" "}
+                        {u.peran === "siswa" && u.kelas
+                          ? `(${u.kelas})`
+                          : u.peran === "admin" && u.unit
+                            ? `(${u.unit})`
+                            : ""}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-center text-xs whitespace-nowrap">
@@ -644,6 +678,27 @@ const ManajemenUserPage = ({ showAlert, showConfirm, URL }) => {
                     }
                     className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-sm dark:bg-slate-700 dark:text-white"
                   />
+                </div>
+              )}
+
+              {formData.peran === "admin" && (
+                <div className="animate-fadeIn">
+                  <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                    Unit Akses Admin *
+                  </label>
+                  <select
+                    value={formData.unit}
+                    onChange={(e) =>
+                      setFormData({ ...formData, unit: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-xl text-sm dark:bg-slate-700 dark:text-white cursor-pointer"
+                  >
+                    <option value="Utama">Utama (Akses Penuh)</option>
+                    <option value="TK">Unit TK</option>
+                    <option value="SD">Unit SD</option>
+                    <option value="SMP">Unit SMP</option>
+                    <option value="SMA">Unit SMA</option>
+                  </select>
                 </div>
               )}
 

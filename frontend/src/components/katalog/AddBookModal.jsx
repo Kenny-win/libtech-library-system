@@ -10,13 +10,14 @@ const AddBookModal = ({
   handleSubmit,
   handleExcelUpload,
   kategoriList,
+  lokasiList, // <-- PROPS BARU UNTUK DAFTAR LOKASI
   isEditMode,
 }) => {
   if (!isOpen) return null;
-
   const tahunSekarang = new Date().getFullYear();
 
   const handleDownloadTemplate = () => {
+    // Template sudah memuat kolom Lokasi
     const headers = [
       "Judul",
       "Penulis",
@@ -27,14 +28,38 @@ const AddBookModal = ({
       "ID Kategori",
       "No Lemari",
       "No Rak",
+      "Lokasi",
       "Tingkatan",
       "Cover Drive ID",
     ];
-
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet([headers]);
     XLSX.utils.book_append_sheet(wb, ws, "Template Import Buku");
     XLSX.writeFile(wb, "template_import_buku.xlsx");
+  };
+
+  // Fungsi pembantu untuk mengelola centang Checkbox Lokasi
+  const handleLokasiCheckboxChange = (idLokasi) => {
+    // Jika formData.lokasi belum berupa array, kita inisialisasi sebagai array kosong
+    const currentLokasi = Array.isArray(formData.lokasi) ? formData.lokasi : [];
+    
+    // Jika lokasi yang dicentang sudah ada di dalam array, kita keluarkan (uncheck)
+    if (currentLokasi.includes(idLokasi)) {
+      handleInputChange({
+        target: {
+          name: "lokasi",
+          value: currentLokasi.filter((id) => id !== idLokasi),
+        },
+      });
+    } else {
+      // Jika belum ada, kita tambahkan ke dalam array (check)
+      handleInputChange({
+        target: {
+          name: "lokasi",
+          value: [...currentLokasi, idLokasi],
+        },
+      });
+    }
   };
 
   return (
@@ -135,7 +160,34 @@ const AddBookModal = ({
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 mt-4">
+
+            {/* BARIS LOKASI CHECKBOX */}
+            <div className="border border-slate-200 rounded-xl p-3 bg-slate-50/50">
+              <label className="block text-xs font-bold uppercase text-slate-500 mb-2 border-b border-slate-200 pb-2">
+                Lokasi Perpustakaan (Bisa Pilih &gt; 1)
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {lokasiList && lokasiList.map((lokasi) => (
+                  <label key={lokasi.id_lokasi} className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      // Periksa apakah id lokasi ini ada di dalam array formData.lokasi
+                      checked={Array.isArray(formData.lokasi) && formData.lokasi.includes(lokasi.id_lokasi)}
+                      onChange={() => handleLokasiCheckboxChange(lokasi.id_lokasi)}
+                      className="w-4 h-4 text-blue-600 bg-white border-slate-300 rounded-sm focus:ring-blue-500 cursor-pointer"
+                    />
+                    <span className="text-sm text-slate-700 group-hover:text-slate-900 transition-colors">
+                      {lokasi.nama_lokasi}
+                    </span>
+                  </label>
+                ))}
+                {(!lokasiList || lokasiList.length === 0) && (
+                  <span className="text-xs text-slate-400 italic">Memuat data lokasi...</span>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
                   Kategori *
@@ -150,7 +202,6 @@ const AddBookModal = ({
                   <option value="" disabled>
                     Pilih Kategori
                   </option>
-                  {/* Lakukan perulangan untuk merender pilihan kategori */}
                   {kategoriList &&
                     kategoriList.map((kat) => (
                       <option key={kat.id_kategori} value={kat.id_kategori}>
@@ -159,8 +210,6 @@ const AddBookModal = ({
                     ))}
                 </select>
               </div>
-
-              {/* Pindahkan input ISBN atau Stok ke samping Kategori agar sejajar */}
               <div>
                 <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
                   ISBN
@@ -175,7 +224,6 @@ const AddBookModal = ({
                 />
               </div>
             </div>
-
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
@@ -193,7 +241,6 @@ const AddBookModal = ({
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:border-blue-500"
                 />
               </div>
-
               <div>
                 <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
                   Stok
@@ -204,32 +251,6 @@ const AddBookModal = ({
                   value={formData.stok}
                   onChange={handleInputChange}
                   min="1"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:border-blue-500"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
-                  Lemari
-                </label>
-                <input
-                  type="number"
-                  name="no_lemari"
-                  value={formData.no_lemari}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
-                  Rak
-                </label>
-                <input
-                  type="number"
-                  name="no_rak"
-                  value={formData.no_rak}
-                  onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:border-blue-500"
                 />
               </div>
@@ -248,6 +269,32 @@ const AddBookModal = ({
                   <option value="SMP">SMP</option>
                   <option value="SMA">SMA</option>
                 </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
+                  No Lemari
+                </label>
+                <input
+                  type="text"
+                  name="no_lemari"
+                  value={formData.no_lemari}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase text-slate-500 mb-1">
+                  No Rak
+                </label>
+                <input
+                  type="text"
+                  name="no_rak"
+                  value={formData.no_rak}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:border-blue-500"
+                />
               </div>
             </div>
             <div className="flex gap-3 pt-4 border-t border-slate-100">

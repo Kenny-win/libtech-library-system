@@ -31,7 +31,8 @@ const login = async (req, res) => {
       email: user.email,
       peran: user.peran,
       kelas: user.kelas,
-      nis_nip: user.nis_nip
+      nis_nip: user.nis_nip,
+      unit: user.unit
     };
 
     res.status(200).json({ 

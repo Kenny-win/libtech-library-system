@@ -18,8 +18,8 @@ import CustomPrompt from "./components/alert/CustomPrompt";
 import FeedbackPage from "./components/feedback/FeedbackPage";
 
 function App() {
-  // const URL = "http://127.0.0.1:5000"; // INI GUNAKAN IP LOCAL 7 PROT : 5000
-  const URL = "https://shrubs-anthem-parrot.ngrok-free.dev";
+  const URL = "http://127.0.0.1:5000"; // INI GUNAKAN IP LOCAL 7 PROT : 5000
+  // const URL = "https://shrubs-anthem-parrot.ngrok-free.dev";
   // Rumus: Jam * Menit * Detik * Milidetik (2 jam session)
   const SESSION_DURATION = 2 * 60 * 60 * 1000;
   const [currentUser, setCurrentUser] = useState(() => {
@@ -79,6 +79,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [lokasiList, setLokasiList] = useState([]);
+
   // Kontrol Modal Tambah Buku & Data Form
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState("manual");
@@ -94,6 +96,7 @@ function App() {
     no_rak: 1,
     tingkatan: "Umum",
     cover_drive_id: "",
+    lokasi: [],
   });
 
   // Kontrol Modal Detail Buku
@@ -111,6 +114,7 @@ function App() {
     isbn: "",
     id_kategori: "",
     rating: "",
+    lokasi: "",
   });
 
   const [sortOrder, setSortOrder] = useState("asc"); // Default: A-Z
@@ -206,10 +210,23 @@ function App() {
       }
     };
 
+    const ambilDataLokasi = async () => {
+      try {
+        const response = await fetch("http://127.0.0.1:5000/api/lokasi");
+        const result = await response.json();
+        if (isMounted && result.success) {
+          setLokasiList(result.data);
+        }
+      } catch (err) {
+        console.error("Gagal mengambil data lokasi", err);
+      }
+    };
+
     // LOGIKA BARU: Hanya ambil ulang data JIKA user sedang membuka tab Katalog
     if (activePage === "katalog") {
       ambilDataBuku();
       ambilDataKategori();
+      ambilDataLokasi();
     }
 
     return () => {
@@ -304,6 +321,7 @@ function App() {
       isbn: "",
       id_kategori: "",
       rating: "",
+      lokasi: "",
     });
     setBatasTampil(12); // Reset batas tampil
   };
@@ -347,6 +365,14 @@ function App() {
     const matchKategori =
       filters.id_kategori === "" ||
       String(buku.id_kategori) === String(filters.id_kategori);
+
+    const matchLokasi =
+      filters.lokasi === "" ||
+      (buku.daftar_lokasi &&
+        buku.daftar_lokasi
+          .toLowerCase()
+          .includes(filters.lokasi.toLowerCase()));
+
     const matchRating =
       filters.rating === "" ||
       Number(buku.rating_rata) >= Number(filters.rating);
@@ -357,7 +383,8 @@ function App() {
       matchPenerbit &&
       matchIsbn &&
       matchKategori &&
-      matchRating
+      matchRating &&
+      matchLokasi
     );
   });
 
@@ -491,6 +518,13 @@ function App() {
   const handleEditClick = (buku) => {
     setIsDetailModalOpen(false); // Tutup modal detail
 
+    let lokasiArray = [];
+    if (buku.daftar_id_lokasi) {
+      lokasiArray = buku.daftar_id_lokasi
+        .split(",")
+        .map((id) => parseInt(id.trim()));
+    }
+
     // Isi formData dengan data buku yang dipilih
     setFormData({
       judul: buku.judul,
@@ -504,6 +538,7 @@ function App() {
       no_rak: buku.no_rak,
       tingkatan: buku.tingkatan,
       cover_drive_id: buku.cover_drive_id || "",
+      lokasi: lokasiArray,
     });
 
     setIsEditMode(true);
@@ -533,7 +568,10 @@ function App() {
         try {
           const response = await fetch(`${URL}/api/peminjaman`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": "true",
+            },
             body: JSON.stringify({
               id_buku: buku.id_buku,
               id_user: idUserAsli,
@@ -633,6 +671,7 @@ function App() {
                 onReset={handleResetFilter}
                 sortOrder={sortOrder}
                 onSortChange={handleSortChange}
+                lokasiList={lokasiList}
               />
             )}
 
@@ -728,6 +767,7 @@ function App() {
             showConfirm={showConfirm}
             URL={URL}
             showPrompt={showPrompt}
+            currentUser={currentUser}
           />
         )}
         {activePage === "pinjamanku" && (
@@ -751,14 +791,14 @@ function App() {
             URL={URL}
           />
         )}
-        {activePage === "reset-password" && role === "admin" && (
+        {activePage === "reset-password" && role === "admin" && currentUser?.unit === "Utama" && (
           <ResetPasswordPage
             showAlert={showAlert}
             showConfirm={showConfirm}
             URL={URL}
           />
         )}
-        {activePage === "manajemen-user" && role === "admin" && (
+        {activePage === "manajemen-user" && role === "admin" && currentUser?.unit === "Utama" && (
           <ManajemenUserPage
             showAlert={showAlert}
             showConfirm={showConfirm}
@@ -802,6 +842,7 @@ function App() {
         handleExcelUpload={handleExcelUpload}
         kategoriList={kategoriList}
         isEditMode={isEditMode}
+        lokasiList={lokasiList}
       />
 
       <CustomAlert

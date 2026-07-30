@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import DetailPinjamanModal from "./DetailPinjamanModal";
 
-const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
+const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt, currentUser }) => {
   const [pinjamanList, setPinjamanList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
   const [selectedPinjaman, setSelectedPinjaman] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const [batasTampil, setBatasTampil] = useState(10);
+  
+  // --- TAMBAHAN BARU: State untuk menyimpan daftar lokasi dari Backend ---
+  const [lokasiList, setLokasiList] = useState([]);
 
   // STATE UNTUK FILTER & SORTING
   const [filters, setFilters] = useState({
@@ -20,45 +21,61 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
     judul: "",
     tanggal_pinjam: "",
     status: "",
+    lokasi: "", // --- TAMBAHAN BARU: State filter lokasi ---
     hanya_terlambat: false,
   });
   const [sortOrder, setSortOrder] = useState("terbaru");
 
-  // Fetch Data dari Backend dengan fitur Auto-Refresh (Silent Polling)
   useEffect(() => {
-    // Kita tambahkan parameter isBackground agar saat auto-refresh, tulisan "Loading..." tidak muncul
+    let isMounted = true;
     const fetchPinjaman = async (isBackground = false) => {
       try {
-        if (!isBackground) setLoading(true); // Hanya loading saat pertama kali buka halaman
+        if (!isBackground) setLoading(true);
 
-        const res = await fetch(`${URL}/api/peminjaman`, {
+        const adminUnit = currentUser?.unit || "Utama";
+        const res = await fetch(`${URL}/api/peminjaman?admin_unit=${adminUnit}`, {
           headers: { "ngrok-skip-browser-warning": "true" },
         });
+        
         const result = await res.json();
-
-        if (result.success) {
+        if (result.success && isMounted) {
           setPinjamanList(result.data);
         }
       } catch (err) {
         console.error("Gagal memuat data sirkulasi di background", err);
       } finally {
-        if (!isBackground) setLoading(false);
+        if (!isBackground && isMounted) setLoading(false);
       }
     };
 
-    // Panggil data untuk pertama kali saat halaman dibuka
+    // --- TAMBAHAN BARU: Fetch daftar lokasi untuk isi dropdown filter ---
+    const fetchLokasi = async () => {
+      try {
+        const response = await fetch(`${URL}/api/lokasi`, {
+           headers: { "ngrok-skip-browser-warning": "true" }
+        });
+        const result = await response.json();
+        if (isMounted && result.success) {
+          setLokasiList(result.data);
+        }
+      } catch (err) {
+        console.error("Gagal mengambil data lokasi", err);
+      }
+    };
+
     fetchPinjaman(false);
+    fetchLokasi(); // Panggil fungsi ambil lokasi
 
-    // Buat pewaktu (Timer) untuk mengambil data baru setiap 5 detik secara diam-diam
     const intervalId = setInterval(() => {
-      fetchPinjaman(true); // isBackground = true (layar tidak akan berkedip)
-    }, 5000); // 5000 milidetik = 5 detik
+      fetchPinjaman(true);
+    }, 5000);
 
-    // Bersihkan timer jika Admin pindah ke halaman lain agar memori tidak bocor
-    return () => clearInterval(intervalId);
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
   }, [URL, refreshTrigger]);
 
-  // Fungsi menghitung keterlambatan saat ini (berjalan) wajib di atas fungsi filteredPinjamanList
   const hitungHariTerlambat = (tenggat) => {
     if (!tenggat) return 0;
     const hariIni = new Date();
@@ -70,7 +87,6 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
     );
     return selisihHari > 0 ? selisihHari : 0;
   };
-
 
   const handleUpdateStatus = async (id_peminjaman, statusBaru, tanggal_harus_kembali = null) => {
     const eksekusiUpdate = async (keteranganTambahan = null) => {
@@ -91,7 +107,7 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
         const result = await res.json();
         if (result.success) {
           showAlert("success", "Status Berhasil Diubah", result.message);
-          setIsModalOpen(false); // Jika Anda memakai popup detail
+          setIsModalOpen(false); 
           setRefreshTrigger((prev) => prev + 1);
         } else {
           showAlert("error", "Status Gagal Diubah", result.message);
@@ -102,7 +118,6 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
       }
     };
 
-    // ALUR JIKA DITOLAK (Gunakan showPrompt)
     if (statusBaru === "ditolak") {
       showPrompt(
         "Alasan Penolakan",
@@ -112,7 +127,6 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
             showAlert("warning", "Alasan Kosong", "Alasan penolakan tidak boleh kosong!");
             return;
           }
-          // Jika alasan diisi, munculkan konfirmasi terakhir
           showConfirm(
             "Tolak Pinjaman",
             "Apakah Anda yakin ingin menolak peminjaman ini?",
@@ -120,9 +134,7 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
           );
         }
       );
-    } 
-    // ALUR JIKA SELAIN DITOLAK (Setujui/Kembali)
-    else {
+    } else {
       showConfirm(
         "Update Status",
         `Ubah status menjadi ${statusBaru.toUpperCase()}?`,
@@ -131,13 +143,10 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
     }
   };
 
-  // HANDLER PERUBAHAN FILTER & SORT
   const handleFilterChange = (e) => {
     const { name, value, type, checked } = e.target;
-    // Deteksi jika yang diubah adalah checkbox
     const finalValue = type === "checkbox" ? checked : value;
 
-    // Jika peran diubah dan bukan "siswa", otomatis kosongkan filter kelas
     if (name === "peran" && finalValue !== "siswa") {
       setFilters({ ...filters, [name]: finalValue, kelas: "" });
     } else {
@@ -155,42 +164,32 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
       judul: "",
       tanggal_pinjam: "",
       status: "",
+      lokasi: "", // --- TAMBAHAN BARU: Reset lokasi ---
       hanya_terlambat: false,
     });
     setSortOrder("terbaru");
     setBatasTampil(10);
   };
 
-  // LOGIKA FILTERING DATA
   const filteredPinjamanList = pinjamanList.filter((item) => {
-    const matchNama =
-      item.nama?.toLowerCase().includes(filters.nama.toLowerCase()) ?? false;
-    const matchNisNip =
-      item.nis_nip?.toLowerCase().includes(filters.nis_nip.toLowerCase()) ??
-      false;
-    const matchJudul =
-      item.judul?.toLowerCase().includes(filters.judul.toLowerCase()) ?? false;
-
+    const matchNama = item.nama?.toLowerCase().includes(filters.nama.toLowerCase()) ?? false;
+    const matchNisNip = item.nis_nip?.toLowerCase().includes(filters.nis_nip.toLowerCase()) ?? false;
+    const matchJudul = item.judul?.toLowerCase().includes(filters.judul.toLowerCase()) ?? false;
     const matchPeran = filters.peran === "" || item.peran === filters.peran;
-    // Logika Kelas: Cocok jika filter kosong, ATAU jika teks filter ada di dalam string kelas
-    const matchKelas =
-      filters.kelas === "" ||
-      (item.kelas?.toLowerCase().includes(filters.kelas.toLowerCase()) ??
-        false);
+    const matchKelas = filters.kelas === "" || (item.kelas?.toLowerCase().includes(filters.kelas.toLowerCase()) ?? false);
     const matchStatus = filters.status === "" || item.status === filters.status;
+    
+    // --- TAMBAHAN BARU: Filter berdasarkan daftar_lokasi buku ---
+    const matchLokasi = filters.lokasi === "" || 
+      (item.daftar_lokasi && item.daftar_lokasi.toLowerCase().includes(filters.lokasi.toLowerCase()));
 
-    // Konversi tanggal dari database (ISO string) ke format YYYY-MM-DD agar bisa dicocokkan dengan input type="date"
     const itemTanggal = item.tanggal_pinjam
       ? new Date(item.tanggal_pinjam).toISOString().split("T")[0]
       : "";
-    const matchTanggal =
-      filters.tanggal_pinjam === "" || itemTanggal === filters.tanggal_pinjam;
+    const matchTanggal = filters.tanggal_pinjam === "" || itemTanggal === filters.tanggal_pinjam;
 
-    // LOGIKA FILTER TERLAMBAT
-    const isTerlambat =
-      item.status === "dipinjam" &&
-      hitungHariTerlambat(item.tanggal_harus_kembali) > 0;
-    const matchTerlambat = !filters.hanya_terlambat || isTerlambat; // Lolos jika checkbox mati, ATAU jika kondisinya memang terlambat
+    const isTerlambat = item.status === "dipinjam" && hitungHariTerlambat(item.tanggal_harus_kembali) > 0;
+    const matchTerlambat = !filters.hanya_terlambat || isTerlambat; 
 
     return (
       matchNama &&
@@ -200,11 +199,11 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
       matchKelas &&
       matchStatus &&
       matchTanggal &&
+      matchLokasi && // --- TAMBAHAN BARU: Pastikan filter lokasi di-return ---
       matchTerlambat
     );
   });
 
-  // LOGIKA SORTING DATA
   const sortedPinjamanList = [...filteredPinjamanList].sort((a, b) => {
     if (sortOrder === "terbaru") {
       return new Date(b.tanggal_pinjam) - new Date(a.tanggal_pinjam);
@@ -265,8 +264,9 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-          {/* Filter Nama */}
+        {/* --- GRID FILTER DIUBAH MENJADI grid-cols-7 AGAR BISA MEMUAT FILTER LOKASI --- */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
+          
           <div>
             <label className="block dark:text-white text-[10px] font-bold uppercase text-slate-500 mb-1">
               Nama Peminjam
@@ -280,7 +280,7 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
               placeholder="Cari nama..."
             />
           </div>
-          {/* Filter NIS/NIP */}
+
           <div>
             <label className="block dark:text-white text-[10px] font-bold uppercase text-slate-500 mb-1">
               NIS/NIP
@@ -294,7 +294,7 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
               placeholder="Cari NIS/NIP..."
             />
           </div>
-          {/* Filter Peran */}
+
           <div>
             <label className="block dark:text-white text-[10px] font-bold uppercase text-slate-500 mb-1">
               Peran
@@ -303,7 +303,7 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
               name="peran"
               value={filters.peran}
               onChange={handleFilterChange}
-              className="w-full dark:bg-slate-800 dark:text-slate-200 px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white focus:outline-hidden focus:border-blue-500"
+              className="w-full dark:bg-slate-800 dark:text-slate-200 px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white focus:outline-hidden focus:border-blue-500 cursor-pointer"
             >
               <option value="">Semua Peran</option>
               <option value="siswa">Siswa</option>
@@ -311,7 +311,7 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
             </select>
           </div>
 
-          {/* Filter Kelas (HANYA MUNCUL JIKA PERAN = SISWA) */}
+          {/* Filter Kelas dinamis jika Siswa */}
           {filters.peran === "siswa" && (
             <div className="animate-fadeIn">
               <label className="block dark:text-white text-[10px] font-bold uppercase text-slate-500 mb-1">
@@ -328,7 +328,6 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
             </div>
           )}
 
-          {/* Filter Judul Buku */}
           <div>
             <label className="block dark:text-white text-[10px] font-bold uppercase text-slate-500 mb-1">
               Judul Buku
@@ -342,7 +341,27 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
               placeholder="Cari judul buku..."
             />
           </div>
-          {/* Filter Tanggal Pinjam */}
+
+          {/* --- TAMBAHAN BARU: FILTER LOKASI --- */}
+          <div>
+            <label className="block dark:text-white text-[10px] font-bold uppercase text-slate-500 mb-1">
+              Lokasi Buku
+            </label>
+            <select
+              name="lokasi"
+              value={filters.lokasi}
+              onChange={handleFilterChange}
+              className="w-full dark:bg-slate-800 dark:text-slate-200 px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white focus:outline-hidden focus:border-blue-500 cursor-pointer"
+            >
+              <option value="">Semua Lokasi</option>
+              {lokasiList.map((lok) => (
+                <option key={lok.id_lokasi} value={lok.nama_lokasi}>
+                  {lok.nama_lokasi}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <label className="block dark:text-white text-[10px] font-bold uppercase text-slate-500 mb-1">
               Tanggal Pinjam
@@ -355,7 +374,7 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
               className="w-full dark:text-slate-200 px-3 py-2 border border-slate-200 rounded-xl text-xs focus:outline-hidden focus:border-blue-500"
             />
           </div>
-          {/* Filter Status */}
+
           <div>
             <label className="block dark:text-white text-[10px] font-bold uppercase text-slate-500 mb-1">
               Status
@@ -364,7 +383,7 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
               name="status"
               value={filters.status}
               onChange={handleFilterChange}
-              className="w-full dark:bg-slate-800 dark:text-slate-200 px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white focus:outline-hidden focus:border-blue-500"
+              className="w-full dark:bg-slate-800 dark:text-slate-200 px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white focus:outline-hidden focus:border-blue-500 cursor-pointer"
             >
               <option value="">Semua Status</option>
               <option value="pending">Pending / Menunggu</option>
@@ -373,8 +392,8 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
               <option value="ditolak">Ditolak</option>
             </select>
           </div>
-          {/* Filter Hanya Terlambat */}
-          <div className="flex items-center mt-2 sm:mt-6">
+
+          <div className="flex items-center mt-2 sm:mt-6 col-span-1 lg:col-span-2">
             <label className="flex items-center gap-2 cursor-pointer bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-2 rounded-xl transition-colors w-full">
               <input
                 type="checkbox"
@@ -431,11 +450,17 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
                       {item.peran} {item.kelas ? ` - ${item.kelas}` : ""}
                     </div>
                   </td>
-
+                  
                   <td className="px-6 py-4">
                     <div className="font-bold text-slate-800 dark:text-white">
                       {item.judul}
                     </div>
+                    
+                    {/* --- TAMBAHAN BARU: Menampilkan Lokasi di Kolom Buku --- */}
+                    <div className="mt-1 text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md inline-flex items-center gap-1 font-semibold border border-emerald-100">
+                      <span>📍</span> {item.daftar_lokasi || "Lokasi belum diatur"}
+                    </div>
+
                     <div className="text-xs text-slate-500 mt-1 dark:text-slate-200">
                       Stok saat ini:{" "}
                       <span className="font-bold text-slate-700 dark:text-white">
@@ -451,8 +476,6 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
                         "id-ID",
                       )}
                     </div>
-
-                    {/* Logika Tampilan Tenggat & Denda */}
                     {item.status === "kembali" ? (
                       <div className="mt-1">
                         <div className="text-emerald-600 dark:text-emerald-400">
@@ -478,8 +501,6 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
                             item.tanggal_harus_kembali,
                           ).toLocaleDateString("id-ID")}
                         </div>
-
-                        {/* Jika sedang dipinjam dan LEWAT TENGGAT, munculkan peringatan berjalan */}
                         {item.status === "dipinjam" &&
                           hitungHariTerlambat(item.tanggal_harus_kembali) >
                             0 && (
@@ -487,7 +508,6 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
                               ⚠️ Lewat{" "}
                               {hitungHariTerlambat(item.tanggal_harus_kembali)}{" "}
                               hari
-                              {/* HANYA TAMPILKAN ESTIMASI DENDA JIKA PERAN = SISWA */}
                               {item.peran === "siswa" &&
                                 ` (Est. Denda: Rp ${(hitungHariTerlambat(item.tanggal_harus_kembali) * 1000).toLocaleString("id-ID")})`}
                             </div>
@@ -495,7 +515,6 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
                       </>
                     )}
                   </td>
-
                   <td className="px-6 py-4">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
@@ -511,8 +530,6 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
                       {item.status}
                     </span>
                   </td>
-
-                  {/* UBAH ISI KOLOM AKSI INI */}
                   <td className="px-6 py-4 text-center">
                     <button
                       onClick={() => {
@@ -541,7 +558,6 @@ const DaftarPinjamanPage = ({ showAlert, showConfirm, URL, showPrompt }) => {
           </tbody>
         </table>
       </div>
-      {/* TOMBOL LOAD MORE DI BAWAH TABEL */}
       {batasTampil < sortedPinjamanList.length && (
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+
 const BookDetailModal = ({
   isOpen,
   buku,
@@ -22,7 +23,6 @@ const BookDetailModal = ({
   const [refreshUlasan, setRefreshUlasan] = useState(0);
 
   const [isReviewsModalOpen, setIsReviewsModalOpen] = useState(false);
-
   const [isEditingReview, setIsEditingReview] = useState(false);
   const [editUlasanId, setEditUlasanId] = useState(null);
 
@@ -48,7 +48,7 @@ const BookDetailModal = ({
             setRataRata(result.rataRata);
             setTotalUlasan(result.totalUlasan);
           }
-          // eslint-disable-next-line no-unused-vars
+        // eslint-disable-next-line no-unused-vars
         } catch (err) {
           console.error("Gagal memuat ulasan");
         }
@@ -60,7 +60,6 @@ const BookDetailModal = ({
   const handleSubmitUlasan = async (e) => {
     e.preventDefault();
     if (!currentUser) return;
-
     try {
       setIsSubmitting(true);
       const url = isEditingReview
@@ -81,8 +80,8 @@ const BookDetailModal = ({
           komentar: komentarInput,
         }),
       });
-      const result = await res.json();
 
+      const result = await res.json();
       if (result.success) {
         if (showAlert) showAlert("success", "Berhasil", result.message);
         setIsEditingReview(false);
@@ -93,7 +92,7 @@ const BookDetailModal = ({
       } else {
         if (showAlert) showAlert("error", "Gagal", result.message);
       }
-      // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line no-unused-vars
     } catch (err) {
       if (showAlert) showAlert("error", "Error", "Gagal mengirim ulasan.");
     } finally {
@@ -168,6 +167,7 @@ const BookDetailModal = ({
                 Ditulis oleh{" "}
                 <span className="font-bold text-slate-800">{buku.penulis}</span>
               </p>
+              
               <div className="space-y-3 text-sm border-t border-b border-slate-100 py-4 mb-6">
                 <div className="grid grid-cols-3 gap-1">
                   <span className="text-slate-400 font-medium">Penerbit</span>
@@ -176,9 +176,7 @@ const BookDetailModal = ({
                   </span>
                 </div>
                 <div className="grid grid-cols-3 gap-1">
-                  <span className="text-slate-400 font-medium">
-                    Tahun Terbit
-                  </span>
+                  <span className="text-slate-400 font-medium">Tahun Terbit</span>
                   <span className="col-span-2 font-semibold text-slate-700">
                     : {buku.tahun_terbit || "-"}
                   </span>
@@ -189,14 +187,25 @@ const BookDetailModal = ({
                     : {buku.tingkatan || "Umum"}
                   </span>
                 </div>
+
+                {/* MODIFIKASI: PENAMBAHAN INFO LOKASI BUKU */}
                 <div className="grid grid-cols-3 gap-1">
-                  <span className="text-slate-400 font-medium">Tata Letak</span>
-                  <span className="col-span-2 font-semibold text-blue-600 bg-blue-50/50 px-2 py-0.5 rounded-md border border-blue-100/50 w-fit text-xs">
-                    🏢 Lemari {buku.no_lemari}, Rak {buku.no_rak}
+                  <span className="text-slate-400 font-medium mt-0.5">Lokasi Utama</span>
+                  <span className="col-span-2 font-semibold text-emerald-700 bg-emerald-50/50 px-2 py-1 rounded-md border border-emerald-100/50 w-fit text-xs">
+                    📍 {buku.daftar_lokasi || "Lokasi belum ditentukan"}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-1">
+                  <span className="text-slate-400 font-medium mt-0.5">Tata Letak Detail</span>
+                  <span className="col-span-2 font-semibold text-blue-600 bg-blue-50/50 px-2 py-1 rounded-md border border-blue-100/50 w-fit text-xs">
+                    🏢 Lemari {buku.no_lemari || "-"}, Rak {buku.no_rak || "-"}
                   </span>
                 </div>
               </div>
             </div>
+
+            {/* Sisa konten dari komponen Anda tetap tidak berubah di bawah ini */}
             <div className="flex flex-col pt-4 mt-4 border-t border-slate-100 gap-4">
               <div>
                 <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">
@@ -209,7 +218,7 @@ const BookDetailModal = ({
                 </span>
               </div>
 
-              {/* ---> BLOK ULASAN & RATING <--- */}
+              {/* Blok Ulasan */}
               <div className="mt-6 border-t border-slate-100 pt-6">
                 <div className="flex justify-between items-center mb-4">
                   <h4 className="text-sm font-bold text-slate-800">
@@ -223,8 +232,6 @@ const BookDetailModal = ({
                   </div>
                 </div>
 
-                {/* Form Tambah Ulasan */}
-                {/* Form HANYA muncul jika: belum direview ATAU sedang mode edit. Dan yang login bukan admin */}
                 {currentUser && (!hasReviewed || isEditingReview) && (
                   <form
                     onSubmit={handleSubmitUlasan}
@@ -250,7 +257,6 @@ const BookDetailModal = ({
                         </button>
                       )}
                     </div>
-
                     <div className="flex items-center gap-2 mb-3">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
@@ -286,17 +292,14 @@ const BookDetailModal = ({
                   </form>
                 )}
 
-                {/* ---> DAFTAR ULASAN (Tampilkan HANYA 1) <--- */}
                 <div className="space-y-3">
                   {sortedUlasanList.length > 0 ? (
                     <>
-                      {/* Gunakan sortedUlasanList agar ulasan user selalu di atas */}
                       {sortedUlasanList.slice(0, 1).map((ulasan) => (
                         <div
                           key={ulasan.id_ulasan}
                           className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700 relative transition-colors"
                         >
-                          {/* Jika ulasan ini milik user, tampilkan tombol Edit */}
                           {currentUser &&
                             ulasan.id_user === currentUser.id_user &&
                             !isEditingReview && (
@@ -307,7 +310,6 @@ const BookDetailModal = ({
                                 ✏️ Edit
                               </button>
                             )}
-
                           <div className="flex justify-between items-start mb-1 pr-16">
                             <div>
                               <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block">
@@ -342,8 +344,6 @@ const BookDetailModal = ({
                           </p>
                         </div>
                       ))}
-
-                      {/* Tombol Lihat Semua (Muncul jika ulasan lebih dari 1) */}
                       {ulasanList.length > 1 && (
                         <button
                           onClick={() => setIsReviewsModalOpen(true)}
@@ -361,7 +361,7 @@ const BookDetailModal = ({
                 </div>
               </div>
 
-              {/* ---> POPUP KHUSUS SEMUA ULASAN <--- */}
+              {/* Popup Semua Ulasan */}
               {isReviewsModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-60 animate-fadeIn">
                   <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6 border border-slate-100 flex flex-col max-h-[85vh]">
@@ -381,7 +381,6 @@ const BookDetailModal = ({
                         &times;
                       </button>
                     </div>
-
                     <div className="flex items-center gap-3 mb-6 bg-amber-50 p-4 rounded-xl border border-amber-100">
                       <span className="text-3xl">⭐</span>
                       <div>
@@ -393,7 +392,6 @@ const BookDetailModal = ({
                         </span>
                       </div>
                     </div>
-
                     <div className="flex-1 overflow-y-auto space-y-4 pr-2">
                       {ulasanList.map((ulasan) => (
                         <div
@@ -438,7 +436,7 @@ const BookDetailModal = ({
                   </div>
                 </div>
               )}
-              {/* ---> AKHIR BLOK ULASAN <--- */}
+
               <div className="flex items-center gap-2 justify-end w-full">
                 <button
                   onClick={handleCloseModal}
@@ -446,7 +444,6 @@ const BookDetailModal = ({
                 >
                   Tutup
                 </button>
-
                 {role === "admin" && (
                   <>
                     <button
@@ -463,7 +460,6 @@ const BookDetailModal = ({
                     </button>
                   </>
                 )}
-
                 <button
                   disabled={buku.stok <= 0}
                   onClick={() => onPinjamClick(buku)}

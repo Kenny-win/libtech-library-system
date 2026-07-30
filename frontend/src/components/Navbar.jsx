@@ -107,22 +107,27 @@ const Navbar = ({
                     <div className="absolute top-full left-0 mt-0 w-48 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all flex flex-col overflow-hidden z-50">
                       <button
                         onClick={() => setActivePage("kategori")}
-                        className={`text-left px-4 py-3 text-sm font-bold transition-colors ${activePage === "kategori" ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"}`}
+                        className={`text-left px-4 py-3 text-sm cursor-pointer font-bold transition-colors ${activePage === "kategori" ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"}`}
                       >
                         📂 Kategori Buku
                       </button>
-                      <button
-                        onClick={() => setActivePage("manajemen-user")}
-                        className={`text-left px-4 py-3 text-sm font-bold border-t border-slate-100 dark:border-slate-700 transition-colors ${activePage === "manajemen-user" ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"}`}
-                      >
-                        👥 Manajemen User
-                      </button>
-                      <button
-                        onClick={() => setActivePage("reset-password")}
-                        className={`text-left px-4 py-3 text-sm font-bold border-t border-slate-100 dark:border-slate-700 transition-colors ${activePage === "reset-password" ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"}`}
-                      >
-                        🔑 Keamanan User
-                      </button>
+
+                      {currentUser?.unit === "Utama" && (
+                        <>
+                          <button
+                            onClick={() => setActivePage("manajemen-user")}
+                            className={`text-left px-4 py-3 text-sm cursor-pointer font-bold border-t border-slate-100 dark:border-slate-700 transition-colors ${activePage === "manajemen-user" ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"}`}
+                          >
+                            👥 Manajemen User
+                          </button>
+                          <button
+                            onClick={() => setActivePage("reset-password")}
+                            className={`text-left px-4 py-3 text-sm cursor-pointer font-bold border-t border-slate-100 dark:border-slate-700 transition-colors ${activePage === "reset-password" ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"}`}
+                          >
+                            🔑 Keamanan User
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </>
@@ -196,7 +201,7 @@ const Navbar = ({
                   className="text-xs font-black text-slate-800 dark:text-slate-100 truncate w-full text-right"
                   title={currentUser.nama}
                 >
-                  {currentUser.nama}
+                  Hai, {currentUser.nama.split(" ")[0]}
                 </span>
               </div>
             )}
@@ -299,24 +304,28 @@ const Navbar = ({
                 >
                   📂 Kategori Buku
                 </button>
-                <button
-                  onClick={() => {
-                    setActivePage("manajemen-user");
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className={`w-full text-left text-sm font-bold px-3 py-2 rounded-lg transition-colors ${activePage === "manajemen-user" ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"}`}
-                >
-                  👥 Manajemen User
-                </button>
-                <button
-                  onClick={() => {
-                    setActivePage("reset-password");
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className={`w-full text-left text-sm font-bold px-3 py-2 rounded-lg transition-colors ${activePage === "reset-password" ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"}`}
-                >
-                  🔑 Keamanan User
-                </button>
+                {currentUser?.unit === "Utama" && (
+                  <>
+                    <button
+                      onClick={() => {
+                        setActivePage("manajemen-user");
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`w-full text-left text-sm font-bold px-3 py-2 rounded-lg transition-colors ${activePage === "manajemen-user" ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"}`}
+                    >
+                      👥 Manajemen User
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActivePage("reset-password");
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`w-full text-left text-sm font-bold px-3 py-2 rounded-lg transition-colors ${activePage === "reset-password" ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400" : "text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"}`}
+                    >
+                      🔑 Keamanan User
+                    </button>
+                  </>
+                )}
               </div>
             </>
           )}

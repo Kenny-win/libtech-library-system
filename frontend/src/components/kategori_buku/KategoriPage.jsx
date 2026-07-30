@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
+import * as XLSX from "xlsx";
 
 const KategoriPage = ({ showAlert, showConfirm, URL }) => {
   const [kategoriList, setKategoriList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const [isUploading, setIsUploading] = useState(false);
+  const [modalTab, setModalTab] = useState("manual");
 
   // State untuk Filter & Modal
   const [searchQuery, setSearchQuery] = useState("");
@@ -23,7 +27,7 @@ const KategoriPage = ({ showAlert, showConfirm, URL }) => {
       try {
         setLoading(true);
         const res = await fetch(`${URL}/api/kategori`, {
-          headers: { "ngrok-skip-browser-warning": "true" }
+          headers: { "ngrok-skip-browser-warning": "true" },
         });
         const result = await res.json();
         if (result.success) setKategoriList(result.data);
@@ -50,7 +54,10 @@ const KategoriPage = ({ showAlert, showConfirm, URL }) => {
 
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
         body: JSON.stringify(formData),
       });
       const result = await res.json();
@@ -85,10 +92,10 @@ const KategoriPage = ({ showAlert, showConfirm, URL }) => {
       async () => {
         // SELURUH LOGIKA FETCH DIMASUKKAN KE DALAM SINI
         try {
-          const res = await fetch(
-            `${URL}/api/kategori/${id_kategori}`,
-            { method: "DELETE", headers: { "ngrok-skip-browser-warning": "true" } },
-          );
+          const res = await fetch(`${URL}/api/kategori/${id_kategori}`, {
+            method: "DELETE",
+            headers: { "ngrok-skip-browser-warning": "true" },
+          });
           const result = await res.json();
 
           if (result.success) {
@@ -114,6 +121,7 @@ const KategoriPage = ({ showAlert, showConfirm, URL }) => {
     setIsEditMode(false);
     setEditId(null);
     setFormData({ nama_kategori: "" });
+    setModalTab("manual"); // <-- Tambahkan ini
     setIsModalOpen(true);
   };
 
@@ -144,6 +152,62 @@ const KategoriPage = ({ showAlert, showConfirm, URL }) => {
     }
     return 0;
   });
+
+  // ---> FUNGSI DOWNLOAD TEMPLATE KATEGORI <---
+  const handleDownloadTemplate = () => {
+    const headers = ["Nama Kategori"];
+    const dummyData = [["Fiksi Ilmiah"], ["Sejarah Dunia"], ["Buku Anak-Anak"]];
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...dummyData]);
+    ws["!cols"] = [{ wch: 30 }]; // Melebarkan kolom A agar rapi
+
+    XLSX.utils.book_append_sheet(wb, ws, "Template Kategori");
+    XLSX.writeFile(wb, "template_import_kategori.xlsx");
+  };
+
+  // ---> FUNGSI UPLOAD EXCEL <---
+  const handleExcelUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    showConfirm(
+      "Upload Excel?",
+      `Anda akan mengimpor data kategori dari file ${file.name}. Lanjutkan?`,
+      async () => {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          setIsUploading(true);
+          // Pastikan Anda menyesuaikan URL-nya jika menggunakan variabel `${URL}`
+          const response = await fetch(`${URL}/api/kategori/upload`, {
+            method: "POST",
+            headers: { "ngrok-skip-browser-warning": "true" },
+            body: formData,
+          });
+          const result = await response.json();
+
+          if (result.success) {
+            showAlert("success", "Import Selesai", result.message);
+            setRefreshTrigger((prev) => prev + 1);
+          } else {
+            showAlert("error", "Gagal Impor", result.message);
+          }
+          // eslint-disable-next-line no-unused-vars
+        } catch (err) {
+          showAlert(
+            "error",
+            "Terjadi Kesalahan",
+            "Gagal menghubungi server saat upload.",
+          );
+        } finally {
+          setIsUploading(false);
+          e.target.value = ""; // Reset input file agar bisa pilih file yang sama lagi
+        }
+      },
+    );
+  };
 
   return (
     <div>
@@ -305,52 +369,126 @@ const KategoriPage = ({ showAlert, showConfirm, URL }) => {
       {/* MODAL FORM KATEGORI */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 border border-slate-100">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg p-6 border border-slate-100 dark:border-slate-700">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-slate-900">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                 {isEditMode ? "Edit Kategori" : "Tambah Kategori Baru"}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 text-2xl leading-none"
+                className="text-slate-400 hover:text-slate-600 text-2xl leading-none cursor-pointer"
               >
                 &times;
               </button>
             </div>
 
-            <form onSubmit={handleSubmit}>
-              <div className="mb-6">
-                <label className="block text-xs font-bold uppercase text-slate-500 mb-2">
-                  Nama Kategori
-                </label>
-                <input
-                  type="text"
-                  autoFocus
-                  required
-                  value={formData.nama_kategori}
-                  onChange={(e) =>
-                    setFormData({ nama_kategori: e.target.value })
-                  }
-                  placeholder="Misal: Fiksi, Sejarah..."
-                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-hidden focus:border-blue-500"
-                />
-              </div>
-              <div className="flex gap-3">
+            {/* ---> TAB MENU (Hanya muncul jika bukan mode edit) <--- */}
+            {!isEditMode && (
+              <div className="flex border-b border-slate-200 dark:border-slate-700 mb-5">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-2 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 cursor-pointer"
+                  onClick={() => setModalTab("manual")}
+                  className={`flex-1 py-2.5 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
+                    modalTab === "manual"
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  }`}
                 >
-                  Batal
+                  ✏️ Input Manual
                 </button>
                 <button
-                  type="submit"
-                  className="flex-1 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-sm cursor-pointer"
+                  type="button"
+                  onClick={() => setModalTab("excel")}
+                  className={`flex-1 py-2.5 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
+                    modalTab === "excel"
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  }`}
                 >
-                  Simpan
+                  📊 Import File Excel
                 </button>
               </div>
-            </form>
+            )}
+
+            {/* ---> KONTEN TAB MANUAL (Atau Mode Edit) <--- */}
+            {modalTab === "manual" || isEditMode ? (
+              <form onSubmit={handleSubmit}>
+                <div className="mb-6">
+                  <label className="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-2">
+                    Nama Kategori
+                  </label>
+                  <input
+                    type="text"
+                    autoFocus
+                    required
+                    value={formData.nama_kategori}
+                    onChange={(e) =>
+                      setFormData({ nama_kategori: e.target.value })
+                    }
+                    placeholder="Misal: Fiksi, Sejarah..."
+                    className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-hidden focus:border-blue-500 dark:bg-slate-700 dark:text-white"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="flex-1 py-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-600 cursor-pointer transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-sm cursor-pointer transition-colors"
+                  >
+                    Simpan
+                  </button>
+                </div>
+              </form>
+            ) : (
+              /* ---> KONTEN TAB EXCEL <--- */
+              <div className="py-6 text-center space-y-4">
+                <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto border border-emerald-100 dark:border-emerald-800">
+                  <span className="text-3xl">📊</span>
+                </div>
+                <div className="max-w-xs mx-auto">
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                    Unggah Sekaligus via Excel
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Pastikan susunan kolom berkas Excel Anda sudah sesuai dengan
+                    format.
+                  </p>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={handleDownloadTemplate}
+                    className="text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline cursor-pointer hover:no-underline transition-colors"
+                  >
+                    📥 Download Template Format Excel (.xlsx)
+                  </button>
+                </div>
+
+                <div className="pt-4">
+                  <label
+                    className={`inline-flex items-center px-6 py-3 border border-emerald-200 dark:border-emerald-700 rounded-xl text-sm font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors shadow-sm ${isUploading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  >
+                    {isUploading
+                      ? "⏳ Mengunggah..."
+                      : "📁 Pilih File Excel (.xlsx)"}
+                    <input
+                      type="file"
+                      accept=".xlsx, .xls"
+                      onChange={handleExcelUpload}
+                      className="hidden"
+                      disabled={isUploading}
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

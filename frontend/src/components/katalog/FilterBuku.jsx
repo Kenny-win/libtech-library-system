@@ -5,6 +5,7 @@ const FilterBuku = ({
   onReset,
   sortOrder,
   onSortChange,
+  lokasiList,
 }) => {
   return (
     <div className="bg-white p-5 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm mb-8">
@@ -122,6 +123,24 @@ const FilterBuku = ({
                   {kat.nama_kategori} ({kat.jumlah || 0})
                 </option>
               ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 ml-1">
+            Lokasi
+          </label>
+          <select
+            name="lokasi"
+            value={filters.lokasi}
+            onChange={onFilterChange}
+            className="w-full px-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:border-blue-500 bg-white cursor-pointer transition-colors"
+          >
+            <option value="">Semua Lokasi</option>
+            {lokasiList.map((lok) => (
+              <option key={lok.id_lokasi} value={lok.nama_lokasi}>
+                {lok.nama_lokasi}
+              </option>
+            ))}
           </select>
         </div>
         <div>

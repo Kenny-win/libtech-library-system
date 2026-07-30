@@ -1,22 +1,50 @@
-const db = require('../db');
+const db = require("../db");
 
 // mngambil daftar semua sirkulasi peminjaman
 const getPeminjaman = async (req, res) => {
   try {
+    // 1. Tangkap unit admin dari URL query
+    const { admin_unit } = req.query; 
+    let locationFilter = "";
+
+    // 2. Tentukan filter lokasi berdasarkan Unit Admin
+    if (admin_unit === 'TK') {
+      locationFilter = "AND EXISTS (SELECT 1 FROM buku_lokasi bl2 JOIN lokasi l2 ON bl2.id_lokasi = l2.id_lokasi WHERE bl2.id_buku = b.id_buku AND l2.nama_lokasi IN ('Glasshouse', 'Rak Unit TK'))";
+    } else if (admin_unit === 'SD') {
+      locationFilter = "AND EXISTS (SELECT 1 FROM buku_lokasi bl2 JOIN lokasi l2 ON bl2.id_lokasi = l2.id_lokasi WHERE bl2.id_buku = b.id_buku AND l2.nama_lokasi = 'Smart Corner')";
+    } else if (admin_unit === 'SMA') {
+      locationFilter = "AND EXISTS (SELECT 1 FROM buku_lokasi bl2 JOIN lokasi l2 ON bl2.id_lokasi = l2.id_lokasi WHERE bl2.id_buku = b.id_buku AND l2.nama_lokasi = 'Unit SMA')";
+    } else if (admin_unit === 'SMP') {
+      locationFilter = "AND 1 = 0"; // Blokir total karena SMP belum ada alokasi lokasi buku
+    }
+    // Jika admin_unit === 'Utama' atau tidak terdefinisi, locationFilter kosong (tampil semua)
+
+    // 3. Masukkan locationFilter ke dalam query utama Anda
     const query = `
       SELECT 
         p.id_peminjaman, p.tanggal_pinjam, p.tanggal_harus_kembali, 
         p.tanggal_kembali_asli, p.jumlah_hari_terlambat, p.status, p.denda, p.keterangan,
         b.id_buku, b.judul, b.penulis, b.penerbit, b.stok, b.cover_drive_id,
-        u.nama, u.peran, u.kelas, u.nis_nip
+        u.nama, u.peran, u.kelas, u.nis_nip,
+        -- Tambahan kolom lokasi:
+        GROUP_CONCAT(DISTINCT l.nama_lokasi SEPARATOR ', ') AS daftar_lokasi
       FROM peminjaman p
       JOIN buku b ON p.id_buku = b.id_buku
       JOIN users u ON p.id_user = u.id_user
+      -- Relasi ke tabel lokasi:
+      LEFT JOIN buku_lokasi bl ON b.id_buku = bl.id_buku
+      LEFT JOIN lokasi l ON bl.id_lokasi = l.id_lokasi
+      -- Terapkan filter hak akses di sini:
+      WHERE 1=1 ${locationFilter}
+      -- Grouping sangat penting agar baris peminjaman tidak terduplikasi
+      GROUP BY p.id_peminjaman
       ORDER BY p.created_at DESC
     `;
+    
     const [rows] = await db.query(query);
     res.status(200).json({ success: true, data: rows });
   } catch (error) {
+    console.error("Error fetching peminjaman:", error);
     res.status(500).json({ success: false, message: "Gagal mengambil data peminjaman" });
   }
 };
@@ -31,12 +59,12 @@ const updateStatusPeminjaman = async (req, res) => {
     let params = [status];
 
     // Jika status disetujui ("dipinjam") dan admin mengirimkan tanggal tenggat baru, update juga tanggalnya!
-    if (status === 'dipinjam' && tanggal_harus_kembali) {
+    if (status === "dipinjam" && tanggal_harus_kembali) {
       query += ", tanggal_harus_kembali = ?";
       params.push(tanggal_harus_kembali);
     }
 
-    if (status === 'ditolak' && keterangan) {
+    if (status === "ditolak" && keterangan) {
       query += ", keterangan = ?";
       params.push(keterangan);
     }
@@ -45,14 +73,21 @@ const updateStatusPeminjaman = async (req, res) => {
     params.push(id);
 
     const [result] = await db.query(query, params);
-    
+
     if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: "Data peminjaman tidak ditemukan" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Data peminjaman tidak ditemukan" });
     }
-    
-    res.status(200).json({ success: true, message: `Status berhasil diubah menjadi ${status}` });
+
+    res.status(200).json({
+      success: true,
+      message: `Status berhasil diubah menjadi ${status}`,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Gagal mengubah status peminjaman" });
+    res
+      .status(500)
+      .json({ success: false, message: "Gagal mengubah status peminjaman" });
   }
 };
 
@@ -62,24 +97,33 @@ const createPeminjaman = async (req, res) => {
 
   try {
     if (!id_buku || !id_user) {
-      return res.status(400).json({ success: false, message: "Buku dan User harus diisi" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Buku dan User harus diisi" });
     }
 
     // ---> VALIDASI 1: Cek apakah stok buku masih ada <---
-    const [bukuCek] = await db.query("SELECT stok FROM buku WHERE id_buku = ?", [id_buku]);
+    const [bukuCek] = await db.query(
+      "SELECT stok FROM buku WHERE id_buku = ?",
+      [id_buku],
+    );
     if (bukuCek.length === 0 || bukuCek[0].stok <= 0) {
-      return res.status(400).json({ success: false, message: "Maaf, stok buku ini sudah habis dipinjam pengguna lain." });
+      return res.status(400).json({
+        success: false,
+        message: "Maaf, stok buku ini sudah habis dipinjam pengguna lain.",
+      });
     }
 
     // ---> VALIDASI 2: Cek apakah user ini sedang meminjam atau menunggu persetujuan BUKU YANG SAMA <---
     const [pinjamanCek] = await db.query(
       "SELECT id_peminjaman FROM peminjaman WHERE id_user = ? AND id_buku = ? AND status IN ('pending', 'menunggu', 'dipinjam')",
-      [id_user, id_buku]
+      [id_user, id_buku],
     );
     if (pinjamanCek.length > 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Anda masih memiliki pengajuan 'Pending' atau sedang meminjam buku ini. Silakan kembalikan buku terlebih dahulu jika ingin meminjam ulang." 
+      return res.status(400).json({
+        success: false,
+        message:
+          "Anda masih memiliki pengajuan 'Pending' atau sedang meminjam buku ini. Silakan kembalikan buku terlebih dahulu jika ingin meminjam ulang.",
       });
     }
 
@@ -88,16 +132,20 @@ const createPeminjaman = async (req, res) => {
       INSERT INTO peminjaman (id_user, id_buku, tanggal_pinjam, tanggal_harus_kembali, status)
       VALUES (?, ?, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 7 DAY), 'pending')
     `;
-    
+
     await db.query(query, [id_user, id_buku]);
 
-    res.status(201).json({ 
-      success: true, 
-      message: "Permintaan peminjaman berhasil dikirim. Menunggu persetujuan pustakawan." 
+    res.status(201).json({
+      success: true,
+      message:
+        "Permintaan peminjaman berhasil dikirim. Menunggu persetujuan pustakawan.",
     });
   } catch (error) {
     console.error("Error create peminjaman:", error);
-    res.status(500).json({ success: false, message: "Terjadi kesalahan pada server saat meminjam buku." });
+    res.status(500).json({
+      success: false,
+      message: "Terjadi kesalahan pada server saat meminjam buku.",
+    });
   }
 };
 
@@ -120,8 +168,15 @@ const getPeminjamanByUser = async (req, res) => {
     res.status(200).json({ success: true, data: rows });
   } catch (error) {
     console.error("Error get peminjaman by user:", error);
-    res.status(500).json({ success: false, message: "Gagal mengambil data pinjaman Anda" });
+    res
+      .status(500)
+      .json({ success: false, message: "Gagal mengambil data pinjaman Anda" });
   }
 };
 
-module.exports = { getPeminjaman, updateStatusPeminjaman, createPeminjaman, getPeminjamanByUser };
+module.exports = {
+  getPeminjaman,
+  updateStatusPeminjaman,
+  createPeminjaman,
+  getPeminjamanByUser,
+};
